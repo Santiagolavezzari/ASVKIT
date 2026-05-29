@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ASV Kit · Receptores</title>
+<meta name="description" content="Gestión de dispositivos del sistema ASV Kit."/>
+<link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<!-- Mobile Topbar -->
+<div class="mobile-topbar">
+  <div style="font-family: 'Cal Sans', sans-serif; font-size: 18px; font-weight: 600;">ASV Kit</div>
+</div>
+
+<div class="panel-layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <a class="sidebar-logo" href="index.html">
+      <img src="asv-logo.png" alt="ASV Kit Logo" />
+    </a>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section">Aplicación</div>
+      <a class="nav-item" href="dashboard.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+        Dashboard
+      </a>
+      <a class="nav-item" href="historial.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        Historial de Alertas
+      </a>
+
+      <div class="nav-section">Hardware</div>
+      <a class="nav-item" href="sensores.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="4" y="4" width="16" height="16" rx="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="2" x2="9" y2="4"></line><line x1="15" y1="2" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="22"></line><line x1="15" y1="20" x2="15" y2="22"></line><line x1="20" y1="9" x2="22" y2="9"></line><line x1="20" y1="14" x2="22" y2="14"></line><line x1="2" y1="9" x2="4" y2="9"></line><line x1="2" y1="14" x2="4" y2="14"></line></svg>
+        Sensores
+      </a>
+      <a class="nav-item active" href="dispositivos.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="5" y="2" width="14" height="20" rx="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
+        Receptores
+      </a>
+
+      <div class="nav-section">Simulación</div>
+      <a class="nav-item" href="test.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+          <polyline points="2 17 12 22 22 17"/>
+          <polyline points="2 12 12 17 22 12"/>
+        </svg>
+          Laboratorio de Pruebas
+      </a>
+
+      <div class="nav-section admin-only" style="display:none">Administración</div>
+      <a class="nav-item admin-only" href="usuarios.html" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        Usuarios
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar" id="user-avatar">?</div>
+        <div>
+          <div class="user-name" id="user-name">—</div>
+          <div class="user-role" id="user-role">—</div>
+        </div>
+      </div>
+      <button class="nav-item" style="margin-top:8px;" onclick="logout()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+        Cerrar sesión
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <div class="main-content">
+    <div class="content fade-in">
+      
+      <!-- HERO -->
+      <div class="page-header">
+        <h1 class="page-title">Receptores Push</h1>
+        <p class="page-sub">Celulares y ordenadores registrados localmente para recibir notificaciones de alerta PWA.</p>
+      </div>
+
+      <!-- TOOLBAR -->
+      <div style="display:flex; justify-content:flex-end; align-items:center; margin-bottom:32px;">
+        <button class="btn btn-primary admin-only" onclick="openModal()" style="display:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nuevo dispositivo
+        </button>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Dispositivos Vinculados</span>
+          <span id="device-count" style="font-size:13px;color:var(--text-muted)">— registros</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr id="devices-thead-row">
+                <th>Asignación / Nombre</th>
+                <th>FCM Push Token</th>
+                <th>Estado de Red</th>
+                <th>Enlazado el</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="devices-tbody">
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-title">Nuevo Receptor Hub</div>
+    <div class="form-group">
+      <label class="form-label">Identificador del Equipo</label>
+      <input class="form-input" id="m-name" placeholder="Ej: Celular de Administración"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Token de Navegador VAPID <span style="font-weight:400; color:var(--text-light)">(manual / opcional)</span></label>
+      <input class="form-input" id="m-token" placeholder="Insertar Hash Push Notification"/>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" id="save-btn" onclick="createDevice()">Vincular Equipo</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">
+  <div class="toast-dot" id="toast-dot"></div>
+  <span id="toast-msg"></span>
+</div>
+
+<script src="shared.js"></script>
+<script>
+const user = authCheck();
+if (user) initSidebar(user);
+
+function openModal() { document.getElementById('modal').classList.add('open'); }
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+  document.getElementById('m-name').value = '';
+  document.getElementById('m-token').value = '';
+}
+document.getElementById('modal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeModal();
+});
+
+function truncate(str, n = 28) {
+  if (!str) return 'Sin token asigando';
+  return str.length > n ? str.slice(0, n) + '…' : str;
+}
+
+async function createDevice() {
+  const name  = document.getElementById('m-name').value.trim();
+  const token = document.getElementById('m-token').value.trim();
+  if (!name) { showToast('Ingresá un nombre identificador', false); return; }
+  const btn = document.getElementById('save-btn');
+  btn.textContent = 'Vinculando...'; btn.disabled = true;
+  try {
+    const res = await apiFetch('/api/devices', {
+      method: 'POST',
+      body: JSON.stringify({ name, push_token: token || null })
+    });
+    if (!res.ok) throw 0;
+    closeModal();
+    showToast('Receptor vinculado a la red');
+    load();
+  } catch { showToast('Error al vincular el dispositivo', false); }
+  btn.textContent = 'Vincular Equipo'; btn.disabled = false;
+}
+
+async function toggleDevice(id, current) {
+  try {
+    await apiFetch('/api/devices/' + id, {
+      method: 'PUT',
+      body: JSON.stringify({ is_active: !current })
+    });
+    showToast(!current ? 'Receptor reanudado' : 'Receptor silenciado');
+    load();
+  } catch { showToast('Error al sincronizar con la red', false); }
+}
+
+function doDeleteDevice(id, name) {
+  confirmAction(`¿Desenlazar definitivamente el equipo <strong>${name}</strong>? Dejará de recibir notificaciones Push.`, async () => {
+    try {
+      const res = await apiFetch('/api/devices/' + id, { method: 'DELETE' });
+      if (!res.ok) throw 0;
+      showToast('Equipo desenlazado exitosamente');
+      load();
+    } catch { showToast('Error al desenlazar el equipo', false); }
+  });
+}
+
+async function load() {
+  document.getElementById('devices-tbody').innerHTML = '<tr><td colspan="6" class="empty">Comprobando red de equipos...</td></tr>';
+  try {
+    const res = await apiFetch('/api/devices');
+    const list = await res.json();
+    document.getElementById('device-count').textContent = list.length + ' receptores en red';
+    const tbody = document.getElementById('devices-tbody');
+    if (!list.length) {
+      tbody.innerHTML = '<tr><td colspan="6" class="empty">Aún no hay celulares emparejados a la red</td></tr>';
+      return;
+    }
+    const isAdmin = user && user.role === 'admin';
+    const theadRow = document.getElementById('devices-thead-row');
+    if (isAdmin) {
+      theadRow.innerHTML = `
+        <th>Asignación / Nombre</th>
+        <th>Usuario Vinculado</th>
+        <th>FCM Push Token</th>
+        <th>Estado de Red</th>
+        <th>Enlazado el</th>
+        <th>Acciones</th>
+      `;
+    } else {
+      theadRow.innerHTML = `
+        <th>Asignación / Nombre</th>
+        <th>FCM Push Token</th>
+        <th>Estado de Red</th>
+        <th>Enlazado el</th>
+        <th>Acciones</th>
+      `;
+    }
+
+    tbody.innerHTML = list.map(d => `<tr>
+      <td style="font-weight:600">${d.name} ${isAdmin ? `<br> <span class="muted" style="font-size:12px">Cód: ${d.code || 'Oculto'}</span>` : ''}</td>
+      ${isAdmin ? `<td>${d.user_name ? `<span class="badge badge-gray">${d.user_name}</span>` : '<span class="muted" style="font-size:12px">Libre / Sin vincular</span>'}</td>` : ''}
+      <td class="muted"><code style="font-family:'SF Mono', monospace; font-size:12px; background:var(--bg-gray); padding:2px 6px; border-radius:4px;">${truncate(d.push_token)}</code></td>
+      <td><span class="badge ${d.is_active ? 'badge-green' : 'badge-gray'}">
+        <span class="sdot ${d.is_active ? 'sdot-on' : 'sdot-off'}"></span>
+        ${d.is_active ? 'En línea' : 'Silenciado'}
+      </span></td>
+      <td class="muted">${formatDate(d.registered_at)}</td>
+      <td>
+        ${isAdmin ? `
+        <div class="action-group">
+          <button class="btn btn-ghost" onclick="toggleDevice(${d.id}, ${d.is_active})">
+            ${d.is_active ? 'Pausar' : 'Reanudar'}
+          </button>
+          <button class="btn btn-danger" onclick="doDeleteDevice(${d.id}, '${d.name.replace(/'/g, "\\'")}')">Eliminar</button>
+        </div>
+        ` : '<span class="muted" style="font-size:12px;">Solo lectura</span>'}
+      </td>
+    </tr>`).join('');
+  } catch {
+    document.getElementById('devices-tbody').innerHTML =
+      '<tr><td colspan="6" class="empty">Error al comunicarse con la infraestructura de red</td></tr>';
+  }
+}
+
+load();
+</script>
+</body>
+</html>

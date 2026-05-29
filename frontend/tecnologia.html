@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ASV Kit · Tecnología y componentes</title>
+  <meta name="description" content="Detalles técnicos del sistema ASV Kit: hardware, protocolos RF, firmware y arquitectura del backend." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+    rel="stylesheet" />
+  <style>
+    /* ── TOKENS ── */
+    :root {
+      --bg:      #000000;
+      --bg2:     #080808;
+      --bg3:     #121212;
+      --bg4:     #1a1a1a;
+      --border:  rgba(255,255,255,0.12);
+      --border2: rgba(255,255,255,0.24);
+      --border3: rgba(255,255,255,0.32);
+      --text:    #ffffff;
+      --text2:   rgba(255,255,255,0.6);
+      --text3:   rgba(255,255,255,0.35);
+      --blue:    #ffffff;
+      --blue2:   rgba(255,255,255,0.85);
+      --blue-s:  rgba(255,255,255,0.08);
+      --blue-g:  #ffffff;
+      --green:   #ffffff;
+      --green-s: rgba(255,255,255,0.08);
+      --red:     #ffffff;
+      --red-s:   rgba(255,255,255,0.08);
+      --amber:   #ffffff;
+      --amber-s: rgba(255,255,255,0.08);
+      --teal:    #ffffff;
+      --teal-s:  rgba(255,255,255,0.08);
+      --purple:  #ffffff;
+      --purple-s:rgba(255,255,255,0.08);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: 'Inter', -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased; overflow-x: hidden;
+    }
+    ::selection { background: rgba(59,130,246,0.3); color: #fff; }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
+
+    /* ── MESH BG ── */
+    .mesh {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background:
+        radial-gradient(ellipse 70% 55% at 15% 10%, rgba(59,130,246,0.08) 0%, transparent 65%),
+        radial-gradient(ellipse 55% 45% at 85% 85%, rgba(99,102,241,0.06) 0%, transparent 60%);
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+      height: 56px;
+      background: rgba(0,0,0,0.8); backdrop-filter: blur(24px) saturate(160%);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 40px; transition: background .3s;
+    }
+    nav.scrolled { background: rgba(0,0,0,0.94); }
+
+    .nav-logo {
+      display: flex; align-items: center; gap: 10px; font-size: 15px;
+      font-weight: 700; color: var(--text); text-decoration: none; letter-spacing: -.2px;
+    }
+    .nav-badge { font-size: 10px; font-weight: 600; background: var(--blue-g); color: #fff; padding: 2px 7px; border-radius: 999px; letter-spacing: .03em; }
+    .nav-back {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 13px; color: var(--text2); text-decoration: none;
+      padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border);
+      transition: color .15s, background .15s, border-color .15s;
+    }
+    .nav-back svg { width: 14px; height: 14px; }
+    .nav-back:hover { color: var(--text); background: rgba(255,255,255,0.05); border-color: var(--border2); }
+
+    @media(max-width:600px) { nav { padding: 0 16px; } }
+
+    /* ── PAGE ── */
+    .page { position: relative; z-index: 1; }
+
+    /* ── HERO ── */
+    .tech-hero {
+      padding: 120px 40px 80px;
+      max-width: 900px; margin: 0 auto;
+    }
+    .tech-eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 11px; font-weight: 600; color: var(--blue2);
+      background: var(--blue-s); border: 1px solid rgba(59,130,246,0.25);
+      padding: 5px 14px; border-radius: 999px; margin-bottom: 24px;
+      letter-spacing: .06em; text-transform: uppercase;
+    }
+    .tech-title {
+      font-size: clamp(40px, 7vw, 72px); font-weight: 900;
+      letter-spacing: -3px; line-height: .96; margin-bottom: 20px;
+    }
+    .tech-title .gr {
+      color: rgba(255,255,255,0.6);
+    }
+    .tech-sub { font-size: 17px; color: var(--text2); line-height: 1.7; max-width: 600px; }
+
+    /* ── TOC ── */
+    .toc-strip {
+      max-width: 900px; margin: 0 auto; padding: 0 40px 60px;
+      display: flex; gap: 8px; flex-wrap: wrap;
+    }
+    .toc-chip {
+      font-size: 12px; font-weight: 600; color: var(--text2);
+      background: var(--bg2); border: 1px solid var(--border2);
+      padding: 6px 14px; border-radius: 999px; text-decoration: none;
+      transition: color .15s, background .15s, border-color .15s;
+    }
+    .toc-chip:hover { color: var(--text); background: var(--bg3); border-color: var(--border3); }
+
+    /* ── CONTENT ── */
+    .tech-content { max-width: 900px; margin: 0 auto; padding: 0 40px 120px; }
+
+    /* Section header */
+    .tech-section { margin-bottom: 72px; }
+    .tech-section-eyebrow {
+      font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+      color: var(--blue); margin-bottom: 12px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .tech-section-eyebrow::before { content: ''; width: 16px; height: 1px; background: var(--blue); }
+    .tech-section-title {
+      font-size: clamp(28px, 4vw, 42px); font-weight: 800; letter-spacing: -1.5px;
+      margin-bottom: 14px; line-height: 1.05;
+    }
+    .tech-section-desc { font-size: 15px; color: var(--text2); line-height: 1.7; margin-bottom: 32px; }
+
+    /* Divider */
+    .tech-divider { height: 1px; background: var(--border); margin: 72px 0; }
+
+    /* Component cards */
+    .comp-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 14px; }
+    @media(max-width:640px) { .comp-grid { grid-template-columns: 1fr; } }
+
+    .comp-card {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 18px; padding: 26px;
+      position: relative; overflow: hidden;
+      transition: border-color .25s, transform .2s;
+    }
+    .comp-card:hover { border-color: var(--border2); transform: translateY(-2px); }
+    .comp-tag {
+      font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+      margin-bottom: 12px; display: inline-block;
+    }
+    .comp-name { font-size: 22px; font-weight: 800; letter-spacing: -.5px; margin-bottom: 8px; }
+    .comp-desc { font-size: 13px; color: var(--text2); line-height: 1.65; margin-bottom: 20px; }
+
+    /* Spec rows */
+    .spec-table { display: flex; flex-direction: column; gap: 7px; }
+    .spec-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 12px; border-radius: 9px;
+      background: rgba(255,255,255,0.025); border: 1px solid var(--border);
+    }
+    .spec-key { font-size: 12px; color: var(--text3); font-weight: 500; }
+    .spec-val { font-size: 12px; font-weight: 700; font-family: 'Courier New', monospace; }
+
+    /* Flow diagram */
+    .flow-diagram {
+      background: var(--bg2); border: 1px solid var(--border2);
+      border-radius: 20px; padding: 28px; overflow-x: auto;
+    }
+    .flow-row {
+      display: flex; align-items: center; gap: 0; flex-wrap: nowrap;
+    }
+    .flow-node {
+      background: var(--bg3); border: 1px solid var(--border2);
+      border-radius: 12px; padding: 14px 18px; text-align: center;
+      flex-shrink: 0; min-width: 120px;
+    }
+    .flow-node-icon {
+      width: 36px; height: 36px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.07);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 8px;
+      color: var(--blue2);
+    }
+    .flow-node-icon svg { width: 18px; height: 18px; }
+    .flow-node-label { font-size: 12px; font-weight: 700; margin-bottom: 3px; }
+    .flow-node-sub   { font-size: 10px; color: var(--text3); }
+    .flow-arrow {
+      flex: 1; display: flex; flex-direction: column; align-items: center;
+      gap: 3px; min-width: 50px;
+    }
+    .flow-arrow-line { width: 100%; height: 1px; background: var(--border); position: relative; }
+    .flow-arrow-line::after { content: '▶'; position: absolute; right: -4px; top: -7px; font-size: 9px; color: var(--blue); }
+    .flow-arrow-label { font-size: 9px; color: var(--text3); font-weight: 600; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; }
+
+    /* Code block */
+    .code-block {
+      background: var(--bg3); border: 1px solid var(--border);
+      border-radius: 12px; padding: 18px 20px;
+      font-family: 'Courier New', monospace; font-size: 13px;
+      line-height: 1.7; overflow-x: auto; color: var(--text2);
+    }
+    .code-block .kw  { color: var(--purple); }
+    .code-block .fn  { color: var(--blue2); }
+    .code-block .str { color: var(--green); }
+    .code-block .cm  { color: var(--text3); font-style: italic; }
+    .code-block .num { color: var(--amber); }
+
+    /* Protocol table */
+    .proto-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    .proto-table th {
+      text-align: left; font-size: 11px; font-weight: 600; color: var(--text3);
+      text-transform: uppercase; letter-spacing: .08em;
+      padding: 12px 16px; border-bottom: 1px solid var(--border);
+    }
+    .proto-table td { padding: 13px 16px; font-size: 13px; border-bottom: 1px solid var(--border); }
+    .proto-table tr:last-child td { border-bottom: none; }
+    .proto-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+    /* API endpoint cards */
+    .endpoint-list { display: flex; flex-direction: column; gap: 8px; }
+    .endpoint {
+      display: flex; align-items: flex-start; gap: 14px;
+      padding: 16px 18px; border-radius: 12px;
+      background: var(--bg2); border: 1px solid var(--border);
+      transition: border-color .2s;
+    }
+    .endpoint:hover { border-color: var(--border2); }
+    .ep-method {
+      font-size: 11px; font-weight: 800; font-family: monospace;
+      padding: 4px 9px; border-radius: 6px; flex-shrink: 0; margin-top: 1px;
+    }
+    .ep-get    { background: var(--blue-s);   color: var(--blue); }
+    .ep-post   { background: var(--green-s);  color: var(--green); }
+    .ep-put    { background: var(--amber-s);  color: var(--amber); }
+    .ep-delete { background: var(--red-s);    color: var(--red); }
+    .ep-path   { font-size: 13px; font-weight: 600; font-family: monospace; margin-bottom: 3px; }
+    .ep-desc   { font-size: 12px; color: var(--text2); }
+
+    /* Callout */
+    .callout {
+      display: flex; gap: 14px; padding: 18px 20px;
+      border-radius: 14px; margin: 24px 0;
+    }
+    .callout-info    { background: var(--blue-s); border: 1px solid rgba(59,130,246,.2); }
+    .callout-warning { background: var(--amber-s); border: 1px solid rgba(245,158,11,.2); }
+    .callout svg     { width: 18px; height: 18px; flex-shrink: 0; margin-top: 1px; }
+    .callout-info svg    { color: var(--blue2); }
+    .callout-warning svg { color: var(--amber); }
+    .callout-text { font-size: 13px; line-height: 1.6; color: var(--text2); }
+    .callout-text strong { color: var(--text); }
+
+    /* Animations */
+    @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:none} }
+    @keyframes breathe { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .4; transform: scale(.8); } }
+    .reveal { opacity: 0; transform: translateY(20px); transition: opacity .7s ease, transform .7s ease; }
+    .reveal.visible { opacity: 1; transform: none; }
+
+    @media(max-width:768px) {
+      .tech-hero, .toc-strip, .tech-content { padding-left: 20px; padding-right: 20px; }
+      .tech-hero { padding-top: 90px; }
+    }
+
+    /* ── PAGE SWEEP TRANSITION ── */
+    #page-sweep {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: #000;
+      pointer-events: none;
+      transform: translateX(0%);
+    }
+    #page-sweep.sweep-in      { animation: sweepIn      0.55s cubic-bezier(0.65, 0, 0.35, 1) forwards; }
+    #page-sweep.sweep-out     { animation: sweepOut     0.55s cubic-bezier(0.65, 0, 0.35, 1) forwards; }
+    #page-sweep.sweep-in-back { animation: sweepInBack  0.55s cubic-bezier(0.65, 0, 0.35, 1) forwards; }
+    #page-sweep.sweep-out-back{ animation: sweepOutBack 0.55s cubic-bezier(0.65, 0, 0.35, 1) forwards; }
+    @keyframes sweepIn      { from { transform: translateX(-100%); } to { transform: translateX(0%);    } }
+    @keyframes sweepOut     { from { transform: translateX(0%);    } to { transform: translateX(100%);  } }
+    @keyframes sweepInBack  { from { transform: translateX(100%);  } to { transform: translateX(0%);    } }
+    @keyframes sweepOutBack { from { transform: translateX(0%);    } to { transform: translateX(-100%); } }
+  </style>
+</head>
+
+<body>
+
+  <div id="page-sweep" aria-hidden="true"></div>
+  <div class="mesh"></div>
+
+  <!-- NAV -->
+  <nav id="nav">
+    <a class="nav-logo" href="index.html" id="nav-logo-back" title="Volver al inicio">
+      <img src="asv-logo.png" alt="ASV Kit" style="height:32px;width:auto;display:block;filter:brightness(0) invert(1);" />
+    </a>
+  </nav>
+
+  <div class="page">
+
+    <!-- HERO -->
+    <div class="tech-hero">
+      <div class="tech-eyebrow">Documentación técnica</div>
+      <h1 class="tech-title">Cómo está<br><span class="gr">construido.</span></h1>
+      <p class="tech-sub">
+        Esta página describe en detalle los componentes de hardware, los protocolos de comunicación,
+        la arquitectura del firmware y la API REST que forman el sistema ASV Kit.
+        Orientada a técnicos, desarrolladores y estudiantes.
+      </p>
+    </div>
+
+    <!-- TOC -->
+    <div class="toc-strip">
+      <a class="toc-chip" href="#arquitectura">Arquitectura</a>
+      <a class="toc-chip" href="#hardware">Hardware</a>
+      <a class="toc-chip" href="#protocolo-rf">Protocolo RF</a>
+      <a class="toc-chip" href="#firmware">Firmware</a>
+      <a class="toc-chip" href="#backend">Backend</a>
+      <a class="toc-chip" href="#api">API REST</a>
+      <a class="toc-chip" href="#seguridad">Seguridad</a>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="tech-content">
+
+      <!-- ARQUITECTURA -->
+      <div class="tech-section reveal" id="arquitectura">
+        <div class="tech-section-eyebrow">Visión general</div>
+        <h2 class="tech-section-title">Arquitectura del sistema</h2>
+        <p class="tech-section-desc">
+          El sistema se compone de tres capas independientes que se comunican en cadena:
+          los nodos sensores (emisor RF), la pulsera receptora (ESP32) y el backend web (Flask + SQLite).
+        </p>
+
+        <div class="flow-diagram">
+          <div class="flow-row">
+            <div class="flow-node">
+              <div class="flow-node-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>
+              </div>
+              <div class="flow-node-label">Nodo sensor</div>
+              <div class="flow-node-sub">Arduino Nano + TX433</div>
+            </div>
+            <div class="flow-arrow">
+              <div class="flow-arrow-line"></div>
+              <div class="flow-arrow-label">RF 433 MHz</div>
+            </div>
+            <div class="flow-node">
+              <div class="flow-node-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="6"/><polyline points="12 10 12 12 13 13"/><path d="m16.13 7.66-.81-4.05a2 2 0 0 0-2-1.61h-2.68a2 2 0 0 0-2 1.61l-.78 4.05"/><path d="m7.88 16.36.8 4a2 2 0 0 0 2 1.61h2.72a2 2 0 0 0 2-1.61l.81-4.05"/></svg>
+              </div>
+              <div class="flow-node-label">Pulsera</div>
+              <div class="flow-node-sub">ESP32 + OLED + Háptico</div>
+            </div>
+            <div class="flow-arrow">
+              <div class="flow-arrow-line"></div>
+              <div class="flow-arrow-label">HTTP / Wi-Fi</div>
+            </div>
+            <div class="flow-node">
+              <div class="flow-node-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+              </div>
+              <div class="flow-node-label">Backend</div>
+              <div class="flow-node-sub">Flask + SQLite</div>
+            </div>
+            <div class="flow-arrow">
+              <div class="flow-arrow-line"></div>
+              <div class="flow-arrow-label">REST API</div>
+            </div>
+            <div class="flow-node">
+              <div class="flow-node-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+              </div>
+              <div class="flow-node-label">Panel web</div>
+              <div class="flow-node-sub">HTML + JS (XAMPP)</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout-info" style="margin-top:24px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <div class="callout-text">
+            <strong>Redundancia local:</strong> La comunicación RF entre nodo y pulsera es completamente offline.
+            Aunque el Wi-Fi falle o el backend esté caído, la pulsera sigue recibiendo y mostrando alertas.
+          </div>
+        </div>
+      </div>
+
+      <div class="tech-divider"></div>
+
+      <!-- HARDWARE -->
+      <div class="tech-section reveal" id="hardware">
+        <div class="tech-section-eyebrow">Componentes físicos</div>
+        <h2 class="tech-section-title">Hardware</h2>
+        <p class="tech-section-desc">
+          Tres piezas de hardware trabajan en conjunto. El nodo sensor captura el evento,
+          la pulsera lo recibe y lo presenta al usuario, y el servidor registra todo el historial.
+        </p>
+
+        <div class="comp-grid">
+          <!-- Arduino Nano -->
+          <div class="comp-card">
+            <div class="comp-tag" style="color:var(--blue)">Capa 1 · Emisor</div>
+            <div class="comp-name">Arduino Nano</div>
+            <div class="comp-desc">Microcontrolador ATmega328P que lee las señales de los sensores periféricos y las codifica para su transmisión RF.</div>
+            <div class="spec-table">
+              <div class="spec-row"><span class="spec-key">MCU</span><span class="spec-val" style="color:var(--blue)">ATmega328P @ 16MHz</span></div>
+              <div class="spec-row"><span class="spec-key">Transmisor RF</span><span class="spec-val" style="color:var(--blue)">FS1000A / XY-FST</span></div>
+              <div class="spec-row"><span class="spec-key">Frecuencia</span><span class="spec-val" style="color:var(--blue)">433 MHz</span></div>
+              <div class="spec-row"><span class="spec-key">Protocolo</span><span class="spec-val" style="color:var(--blue)">RCSwitch (OOK)</span></div>
+              <div class="spec-row"><span class="spec-key">Alimentación</span><span class="spec-val" style="color:var(--blue)">5V USB / batería</span></div>
+            </div>
+          </div>
+
+          <!-- Sensores -->
+          <div class="comp-card">
+            <div class="comp-tag" style="color:var(--amber)">Capa 1 · Sensores</div>
+            <div class="comp-name">Sensores periféricos</div>
+            <div class="comp-desc">Módulos conectados al Arduino que detectan los eventos del hogar. Cada sensor corresponde a un tipo de alerta.</div>
+            <div class="spec-table">
+              <div class="spec-row"><span class="spec-key">Humo / vibración</span><span class="spec-val" style="color:var(--amber)">SW-420</span></div>
+              <div class="spec-row"><span class="spec-key">Puerta / ventana</span><span class="spec-val" style="color:var(--amber)">Reed switch NC</span></div>
+              <div class="spec-row"><span class="spec-key">Timbre</span><span class="spec-val" style="color:var(--amber)">Entrada digital 3.3V</span></div>
+              <div class="spec-row"><span class="spec-key">Lavadora</span><span class="spec-val" style="color:var(--amber)">Sensor corriente CT</span></div>
+              <div class="spec-row"><span class="spec-key">Señal</span><span class="spec-val" style="color:var(--amber)">Digital HIGH / LOW</span></div>
+            </div>
+          </div>
+
+          <!-- ESP32 -->
+          <div class="comp-card">
+            <div class="comp-tag" style="color:var(--green)">Capa 2 · Receptor</div>
+            <div class="comp-name">ESP32 (pulsera)</div>
+            <div class="comp-desc">Módulo con Wi-Fi y Bluetooth integrado. Recibe la señal RF, activa la vibración diferenciada y envía la alerta al backend.</div>
+            <div class="spec-table">
+              <div class="spec-row"><span class="spec-key">MCU</span><span class="spec-val" style="color:var(--green)">ESP32 Dual-core 240MHz</span></div>
+              <div class="spec-row"><span class="spec-key">Receptor RF</span><span class="spec-val" style="color:var(--green)">MX-RM-5V / XY-MK-5V</span></div>
+              <div class="spec-row"><span class="spec-key">Display</span><span class="spec-val" style="color:var(--green)">OLED SSD1306 0.96" I²C</span></div>
+              <div class="spec-row"><span class="spec-key">Vibración</span><span class="spec-val" style="color:var(--green)">Motor ERM con driver</span></div>
+              <div class="spec-row"><span class="spec-key">Conectividad</span><span class="spec-val" style="color:var(--green)">Wi-Fi 802.11 b/g/n</span></div>
+            </div>
+          </div>
+
+          <!-- Servidor -->
+          <div class="comp-card">
+            <div class="comp-tag" style="color:var(--purple)">Capa 3 · Backend</div>
+            <div class="comp-name">Servidor (PC local)</div>
+            <div class="comp-desc">Corre bajo XAMPP en Windows. Flask atiende la API REST y sirve el frontend. SQLite almacena el historial completo.</div>
+            <div class="spec-table">
+              <div class="spec-row"><span class="spec-key">Lenguaje</span><span class="spec-val" style="color:var(--purple)">Python 3.10+</span></div>
+              <div class="spec-row"><span class="spec-key">Framework</span><span class="spec-val" style="color:var(--purple)">Flask 3.x</span></div>
+              <div class="spec-row"><span class="spec-key">ORM</span><span class="spec-val" style="color:var(--purple)">SQLAlchemy + Flask-Login</span></div>
+              <div class="spec-row"><span class="spec-key">Base de datos</span><span class="spec-val" style="color:var(--purple)">SQLite 3</span></div>
+              <div class="spec-row"><span class="spec-key">Puerto</span><span class="spec-val" style="color:var(--purple)">localhost:5000</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tech-divider"></div>
+
+      <!-- PROTOCOLO RF -->
+      <div class="tech-section reveal" id="protocolo-rf">
+        <div class="tech-section-eyebrow">Comunicación inalámbrica</div>
+        <h2 class="tech-section-title">Protocolo RF 433 MHz</h2>
+        <p class="tech-section-desc">
+          La señal RF usa modulación OOK (On-Off Keying) con la librería RCSwitch.
+          Cada tipo de evento tiene un código numérico de 24 bits único, almacenado en la base de datos como <code>rf_code</code>.
+        </p>
+
+        <table class="proto-table">
+          <thead>
+            <tr>
+              <th>Tipo de evento</th>
+              <th>rf_code (ejemplo)</th>
+              <th>Patrón vibración</th>
+              <th>Ícono OLED</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Timbre</td>
+              <td style="font-family:monospace;color:var(--blue)">doorbell_A1</td>
+              <td>2 pulsos cortos</td>
+              <td style="font-family:monospace;font-size:12px">BELL</td>
+            </tr>
+            <tr>
+              <td>Humo</td>
+              <td style="font-family:monospace;color:var(--red)">smoke_K3</td>
+              <td>Vibración continua</td>
+              <td style="font-family:monospace;font-size:12px">SMOKE</td>
+            </tr>
+            <tr>
+              <td>Lavadora</td>
+              <td style="font-family:monospace;color:var(--teal)">washer_M2</td>
+              <td>3 pulsos largos</td>
+              <td style="font-family:monospace;font-size:12px">DONE</td>
+            </tr>
+            <tr>
+              <td>Puerta / Ventana</td>
+              <td style="font-family:monospace;color:var(--amber)">door_window_P1</td>
+              <td>1 pulso medio</td>
+              <td style="font-family:monospace;font-size:12px">DOOR</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="callout callout-warning" style="margin-top:24px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <div class="callout-text">
+            <strong>Rango RF:</strong> Con antena telescópica de 17.3 cm (λ/4 a 433 MHz),
+            el alcance típico en interiores es de 20–50 m. Paredes de hormigón pueden reducirlo significativamente.
+            Para plantas mayores se pueden agregar repetidores.
+          </div>
+        </div>
+      </div>
+
+      <div class="tech-divider"></div>
+
+      <!-- FIRMWARE -->
+      <div class="tech-section reveal" id="firmware">
+        <div class="tech-section-eyebrow">Arduino / ESP32</div>
+        <h2 class="tech-section-title">Firmware</h2>
+        <p class="tech-section-desc">
+          El nodo sensor usa la librería <code>RCSwitch</code> para transmitir. El ESP32 de la pulsera usa <code>RCSwitch</code>
+          para recibir y <code>Adafruit SSD1306</code> para el display. La conexión al backend se realiza con <code>HTTPClient</code>.
+        </p>
+
+        <div style="margin-bottom:14px;font-size:13px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">
+          Fragmento — Nodo sensor (Arduino)
+        </div>
+        <div class="code-block">
+<span class="cm">// Envío de código RF al detectar el timbre</span>
+<span class="kw">#include</span> <span class="str">&lt;RCSwitch.h&gt;</span>
+
+RCSwitch mySwitch = RCSwitch();
+
+<span class="kw">void</span> <span class="fn">setup</span>() {
+  mySwitch.<span class="fn">enableTransmit</span>(<span class="num">10</span>);  <span class="cm">// pin TX</span>
+  mySwitch.<span class="fn">setProtocol</span>(<span class="num">1</span>);
+  mySwitch.<span class="fn">setPulseLength</span>(<span class="num">320</span>);
+  pinMode(<span class="num">2</span>, INPUT_PULLUP);      <span class="cm">// pin timbre</span>
+}
+
+<span class="kw">void</span> <span class="fn">loop</span>() {
+  <span class="kw">if</span> (digitalRead(<span class="num">2</span>) == LOW) {
+    mySwitch.<span class="fn">send</span>(<span class="str">"doorbell_A1"</span>);  <span class="cm">// código configurado en DB</span>
+    delay(<span class="num">500</span>);                    <span class="cm">// debounce</span>
+  }
+}
+        </div>
+
+        <div style="margin-top:20px;margin-bottom:14px;font-size:13px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">
+          Fragmento — Pulsera ESP32 (receptor + POST al backend)
+        </div>
+        <div class="code-block">
+<span class="cm">// Recepción y reporte al servidor</span>
+<span class="kw">if</span> (mySwitch.<span class="fn">available</span>()) {
+  String code = String(mySwitch.<span class="fn">getReceivedValue</span>());
+  mySwitch.<span class="fn">resetAvailable</span>();
+
+  <span class="cm">// Mostrar en OLED y vibrar</span>
+  <span class="fn">showAlert</span>(code);
+  <span class="fn">vibrate</span>(PATTERN_DOORBELL);
+
+  <span class="cm">// Reportar al backend Flask</span>
+  HTTPClient http;
+  http.<span class="fn">begin</span>(<span class="str">"http://192.168.1.X:5000/api/alerts"</span>);
+  http.<span class="fn">addHeader</span>(<span class="str">"Content-Type"</span>, <span class="str">"application/json"</span>);
+  String body = <span class="str">"{\"rf_code\":\""</span> + code + <span class="str">"\"}"</span>;
+  <span class="kw">int</span> code = http.<span class="fn">POST</span>(body);
+  http.<span class="fn">end</span>();
+}
+        </div>
+      </div>
+
+      <div class="tech-divider"></div>
+
+      <!-- BACKEND -->
+      <div class="tech-section reveal" id="backend">
+        <div class="tech-section-eyebrow">Servidor</div>
+        <h2 class="tech-section-title">Backend Flask</h2>
+        <p class="tech-section-desc">
+          El servidor corre en Python con Flask, expone una API REST autenticada mediante sesiones HTTP,
+          y persiste datos con SQLAlchemy sobre SQLite. Se ejecuta localmente en el mismo equipo que sirve el frontend.
+        </p>
+
+        <div class="comp-grid">
+          <div class="comp-card">
+            <div class="comp-tag" style="color:var(--purple)">Modelos SQLAlchemy</div>
+            <div class="comp-name" style="font-size:18px">Esquema de datos</div>
+            <div class="spec-table" style="margin-top:14px">
+              <div class="spec-row"><span class="spec-key">User</span><span class="spec-val" style="color:var(--purple)">id, username, role, failed_login_attempts, locked_until</span></div>
+              <div class="spec-row"><span class="spec-key">SensorNode</span><span class="spec-val" style="color:var(--purple)">id, name, type, rf_code, location, is_active</span></div>
+              <div class="spec-row"><span class="spec-key">Alert</span><span class="spec-val" style="color:var(--purple)">id, sensor_node_id, triggered_at, delivery_rf, delivery_push</span></div>
+              <div class="spec-row"><span class="spec-key">Device</span><span class="spec-val" style="color:var(--purple)">id, name, push_token, is_active</span></div>
+            </div>
+          </div>
+          <div class="comp-card">
+            <div class="comp-tag" style="color:var(--teal)">Stack técnico</div>
+            <div class="comp-name" style="font-size:18px">Dependencias</div>
+            <div class="spec-table" style="margin-top:14px">
+              <div class="spec-row"><span class="spec-key">Flask</span><span class="spec-val" style="color:var(--teal)">3.x · servidor WSGI</span></div>
+              <div class="spec-row"><span class="spec-key">Flask-Login</span><span class="spec-val" style="color:var(--teal)">gestión de sesión</span></div>
+              <div class="spec-row"><span class="spec-key">Flask-CORS</span><span class="spec-val" style="color:var(--teal)">control de orígenes</span></div>
+              <div class="spec-row"><span class="spec-key">SQLAlchemy</span><span class="spec-val" style="color:var(--teal)">ORM + migraciones</span></div>
+              <div class="spec-row"><span class="spec-key">Werkzeug</span><span class="spec-val" style="color:var(--teal)">hash bcrypt de contraseñas</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tech-divider"></div>
+
+      <!-- API -->
+      <div class="tech-section reveal" id="api">
+        <div class="tech-section-eyebrow">Interfaz programática</div>
+        <h2 class="tech-section-title">API REST</h2>
+        <p class="tech-section-desc">
+          Todos los endpoints retornan JSON. Los marcados con <span style="font-size:10px;font-weight:700;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.16);padding:1px 6px;border-radius:4px;letter-spacing:.05em">AUTH</span> requieren sesión activa. Los marcados con <span style="font-size:10px;font-weight:700;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.25);color:var(--amber);padding:1px 6px;border-radius:4px;letter-spacing:.05em">ADMIN</span> requieren rol <code>admin</code>.
+        </p>
+
+        <div class="endpoint-list">
+          <div class="endpoint"><span class="ep-method ep-post">POST</span><div><div class="ep-path">/api/auth/login</div><div class="ep-desc">Autenticación con username + password. Retorna id, username, role. Implementa bloqueo tras 5 intentos fallidos.</div></div></div>
+          <div class="endpoint"><span class="ep-method ep-post">POST</span><div><div class="ep-path">/api/auth/logout <span style="font-size:10px;font-weight:700;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.16);padding:1px 5px;border-radius:4px">AUTH</span></div><div class="ep-desc">Cierra la sesión del usuario autenticado.</div></div></div>
+          <div class="endpoint"><span class="ep-method ep-get">GET</span><div><div class="ep-path">/api/auth/me <span style="font-size:10px;font-weight:700;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.16);padding:1px 5px;border-radius:4px">AUTH</span></div><div class="ep-desc">Retorna el perfil del usuario actual.</div></div></div>
+          <div class="endpoint"><span class="ep-method ep-post">POST</span><div><div class="ep-path">/api/auth/change-password <span style="font-size:10px;font-weight:700;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.16);padding:1px 5px;border-radius:4px">AUTH</span></div><div class="ep-desc">Cambia la contraseña validando la actual. Mínimo 8 caracteres.</div></div></div>
+          <div class="endpoint"><span class="ep-method ep-get">GET</span><div><div class="ep-path">/api/stats <span style="font-size:10px;font-weight:700;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.16);padding:1px 5px;border-radius:4px">AUTH</span></div><div class="ep-desc">Retorna contadores: alertas hoy, sensores activos/total, última alerta.</div></div></div>
+          <div class="endpoint"><span class="ep-method ep-get">GET</span><div><div class="ep-path">/api/stats/chart <span style="font-size:10px;font-weight:700;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.16);padding:1px 5px;border-radius:4px">AUTH</span></div><div class="ep-desc">Serie temporal de alertas por día (últimos N días, configurable).</div></div></div>
+          <div class="endpoint"><span class="ep-method ep-get">GET</span><div><div class="ep-path">/api/alerts <span style="font-size:10px;font-weight:700;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.16);padding:1px 5px;border-radius:4px">AUTH</span></div><div class="ep-desc">Listado paginado de alertas. Soporta filtros: ?type=, ?rf=, ?push=, ?page=, ?per_page=</div></div></div>
+          <div class="endpoint"><span class="ep-method ep-post">POST</span><div><div class="ep-path">/api/alerts</div><div class="ep-desc">Crea una alerta. El ESP32 llama a este endpoint con {rf_code}. No requiere sesión (endpoint de hardware).</div></div></div>
+          <div class="endpoint"><span class="ep-method ep-get">GET</span><div><div class="ep-path">/api/sensors <span style="font-size:10px;font-weight:700;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.16);padding:1px 5px;border-radius:4px">AUTH</span></div><div class="ep-desc">Lista todos los nodos sensores registrados.</div></div></div>
+          <div class="endpoint"><span class="ep-method ep-post">POST</span><div><div class="ep-path">/api/sensors <span style="font-size:10px;font-weight:700;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.16);padding:1px 5px;border-radius:4px">AUTH</span></div><div class="ep-desc">Registra un nuevo nodo sensor con name, type, rf_code, location.</div></div></div>
+          <div class="endpoint"><span class="ep-method ep-put">PUT</span><div><div class="ep-path">/api/sensors/:id <span style="font-size:10px;font-weight:700;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.16);padding:1px 5px;border-radius:4px">AUTH</span></div><div class="ep-desc">Actualiza nombre, ubicación o estado activo de un sensor.</div></div></div>
+          <div class="endpoint"><span class="ep-method ep-delete">DELETE</span><div><div class="ep-path">/api/sensors/:id <span style="font-size:10px;font-weight:700;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.16);padding:1px 5px;border-radius:4px">AUTH</span> <span style="font-size:10px;font-weight:700;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.25);color:var(--amber);padding:1px 5px;border-radius:4px">ADMIN</span></div><div class="ep-desc">Elimina un sensor. Solo administradores.</div></div></div>
+          <div class="endpoint"><span class="ep-method ep-get">GET</span><div><div class="ep-path">/api/users <span style="font-size:10px;font-weight:700;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.16);padding:1px 5px;border-radius:4px">AUTH</span> <span style="font-size:10px;font-weight:700;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.25);color:var(--amber);padding:1px 5px;border-radius:4px">ADMIN</span></div><div class="ep-desc">Lista usuarios con estado de bloqueo. Solo administradores.</div></div></div>
+          <div class="endpoint"><span class="ep-method ep-put">PUT</span><div><div class="ep-path">/api/users/:id <span style="font-size:10px;font-weight:700;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.16);padding:1px 5px;border-radius:4px">AUTH</span> <span style="font-size:10px;font-weight:700;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.25);color:var(--amber);padding:1px 5px;border-radius:4px">ADMIN</span></div><div class="ep-desc">Actualiza rol, estado activo o desbloquea cuenta (unlock: true).</div></div></div>
+        </div>
+      </div>
+
+      <div class="tech-divider"></div>
+
+      <!-- SEGURIDAD -->
+      <div class="tech-section reveal" id="seguridad">
+        <div class="tech-section-eyebrow">Autenticación y protección</div>
+        <h2 class="tech-section-title">Seguridad</h2>
+        <p class="tech-section-desc">
+          El sistema implementa varias capas de seguridad orientadas a un despliegue en red local.
+        </p>
+
+        <div class="comp-grid">
+          <div class="comp-card">
+            <div class="comp-tag" style="color:var(--green)">Contraseñas</div>
+            <div class="comp-name" style="font-size:18px">Hash bcrypt</div>
+            <div class="comp-desc">Las contraseñas se almacenan con hash bcrypt via <code>werkzeug.security</code>. Nunca en texto plano.</div>
+          </div>
+          <div class="comp-card">
+            <div class="comp-tag" style="color:var(--red)">Brute-force</div>
+            <div class="comp-name" style="font-size:18px">Bloqueo de cuenta</div>
+            <div class="comp-desc">Tras 5 intentos fallidos consecutivos, la cuenta se bloquea automáticamente por 15 minutos. El admin puede desbloquear manualmente.</div>
+          </div>
+          <div class="comp-card">
+            <div class="comp-tag" style="color:var(--blue)">Sesión</div>
+            <div class="comp-name" style="font-size:18px">Cookie segura</div>
+            <div class="comp-desc"><code>SESSION_COOKIE_SAMESITE=Lax</code> evita CSRF de terceros. <code>flask-login</code> gestiona la sesión del servidor.</div>
+          </div>
+          <div class="comp-card">
+            <div class="comp-tag" style="color:var(--amber)">CORS</div>
+            <div class="comp-name" style="font-size:18px">Orígenes permitidos</div>
+            <div class="comp-desc">Flask-CORS limita las peticiones a <code>localhost</code>, <code>127.0.0.1</code> y <code>null</code> (file://). No se aceptan orígenes externos.</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /tech-content -->
+
+    <!-- FOOTER -->
+    <footer style="border-top:1px solid var(--border);padding:28px 40px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;position:relative;z-index:1">
+      <div style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:var(--text2)">
+        <div style="width:7px;height:7px;border-radius:50%;background:#0071e3;box-shadow:0 0 8px #0071e3;animation:breathe 3s ease-in-out infinite;"></div>
+        ASV Kit · Alerta Sonora Visual
+      </div>
+      <a href="index.html" style="font-size:12px;color:var(--text3);text-decoration:none;transition:color .15s" onmouseover="this.style.color='var(--text2)'" onmouseout="this.style.color='var(--text3)'">← Volver al inicio</a>
+    </footer>
+
+  </div><!-- /page -->
+
+  <script>
+    /* ── Page sweep transition ── */
+    (function() {
+      const sweep = document.getElementById('page-sweep');
+
+      // Sweep out-back to reveal page on load (coming from index, left→right sweep)
+      sweep.style.transform = 'translateX(-100%)';
+      sweep.classList.add('sweep-out');
+
+      // Logo + all index links: reverse sweep (right → left)
+      document.querySelectorAll('a[href="index.html"]').forEach(link => {
+        link.addEventListener('click', e => {
+          e.preventDefault();
+          sweep.style.animation = 'none';
+          sweep.style.transform = 'translateX(100%)';
+          sweep.offsetHeight; // reflow
+          sweep.classList.add('sweep-in-back');
+          setTimeout(() => {
+            sessionStorage.setItem('sweep-back', '1');
+            window.location.href = 'index.html';
+          }, 180);
+        });
+      });
+    })();
+
+    /* NAV scroll */
+    const nav = document.getElementById('nav');
+    window.addEventListener('scroll', () => nav.classList.toggle('scrolled', window.scrollY > 40), { passive: true });
+
+    /* Reveal */
+    document.addEventListener('DOMContentLoaded', () => {
+      setTimeout(() => {
+        const obs = new IntersectionObserver(entries => {
+          entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } });
+        }, { threshold: 0.06 });
+        document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+      }, 80);
+    });
+  </script>
+</body>
+
+</html>

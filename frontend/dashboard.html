@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ASV Kit · Dashboard</title>
+  <meta name="description" content="Panel de control ASV Kit" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ── COMPONENT OVERRIDES FOR DASHBOARD ────────────────── */
+
+    .hero-section {
+      margin-bottom: 80px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 32px;
+      flex-wrap: wrap;
+    }
+
+    .hero-title {
+      font-size: 56px;
+      line-height: 1.05;
+      letter-spacing: -0.5px;
+      margin-bottom: 16px;
+    }
+
+    .hero-sub {
+      font-size: 20px;
+      color: var(--text-muted);
+      padding-left: 2px;
+    }
+
+    .toolbar-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: var(--radius-pill);
+      background: var(--bg);
+      box-shadow: var(--shadow-ring);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    .toolbar-chip strong {
+      color: var(--text-main);
+      font-weight: 600;
+    }
+
+    /* Key Metrics Strip */
+    .metrics-strip {
+      display: flex;
+      gap: 48px;
+      margin-bottom: 80px;
+      flex-wrap: wrap;
+    }
+
+    .metric-block {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .metric-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .metric-value {
+      font-family: 'Cal Sans', sans-serif;
+      font-size: 48px;
+      line-height: 1;
+      color: var(--text-main);
+    }
+
+    .metric-divider {
+      width: 1px;
+      background: rgba(255, 255, 255, 0.08);
+      /* Adjusted for dark mode */
+      margin: 8px 0;
+    }
+
+    /* Grids */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 32px;
+      margin-bottom: 48px;
+    }
+
+    @media(max-width:1024px) {
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .metrics-strip {
+        gap: 32px;
+      }
+    }
+
+    /* Lists inside cards */
+    .alerts-list {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .alert-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      padding: 20px 24px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .alert-item:last-child {
+      border-bottom: none;
+    }
+
+    .alert-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: var(--bg);
+      /* Keep icons contrasting with bright backgrounds */
+    }
+
+    .alert-icon svg {
+      width: 20px;
+      height: 20px;
+      stroke-width: 1.5;
+      color: var(--bg);
+    }
+
+    .alert-title {
+      font-family: 'Cal Sans', sans-serif;
+      font-size: 16px;
+      color: var(--text-deep);
+      margin-bottom: 4px;
+    }
+
+    .alert-desc {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .alert-time {
+      font-size: 12px;
+      color: var(--text-light);
+      margin-top: 6px;
+    }
+
+    .sensor-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      justify-content: space-between;
+      padding: 16px 24px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .sensor-item:last-child {
+      border-bottom: none;
+    }
+
+    .sensor-item-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+      animation: pulse-ring 2s infinite;
+      display: inline-block;
+    }
+
+    @keyframes pulse-ring {
+      0% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+      }
+
+      70% {
+        box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
+      }
+
+      100% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+      }
+    }
+
+    .chart-wrap {
+      height: 240px;
+    }
+
+    /* Search */
+    .top-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 40px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    #alerts-search {
+      max-width: 320px;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Mobile Topbar -->
+  <div class="mobile-topbar">
+    <div style="font-family: 'Cal Sans', sans-serif; font-size: 18px; font-weight: 600;">ASV Kit</div>
+    <div id="mobile-conn" class="sdot sdot-off"></div>
+  </div>
+
+  <div class="panel-layout">
+
+    <!-- ── SIDEBAR ────────────────────────────────────── -->
+    <aside class="sidebar">
+      <a class="sidebar-logo" href="index.html">
+        <img src="asv-logo.png" alt="ASV Kit Logo" />
+      </a>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section">Aplicación</div>
+        <a class="nav-item active" href="dashboard.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <rect x="3" y="3" width="7" height="7"></rect>
+            <rect x="14" y="3" width="7" height="7"></rect>
+            <rect x="14" y="14" width="7" height="7"></rect>
+            <rect x="3" y="14" width="7" height="7"></rect>
+          </svg>
+          Dashboard
+        </a>
+        <a class="nav-item" href="historial.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+          Historial de Alertas
+        </a>
+
+        <div class="nav-section">Hardware</div>
+        <a class="nav-item" href="sensores.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <rect x="4" y="4" width="16" height="16" rx="2"></rect>
+            <rect x="9" y="9" width="6" height="6"></rect>
+            <line x1="9" y1="2" x2="9" y2="4"></line>
+            <line x1="15" y1="2" x2="15" y2="4"></line>
+            <line x1="9" y1="20" x2="9" y2="22"></line>
+            <line x1="15" y1="20" x2="15" y2="22"></line>
+            <line x1="20" y1="9" x2="22" y2="9"></line>
+            <line x1="20" y1="14" x2="22" y2="14"></line>
+            <line x1="2" y1="9" x2="4" y2="9"></line>
+            <line x1="2" y1="14" x2="4" y2="14"></line>
+          </svg>
+          Sensores
+        </a>
+        <a class="nav-item" href="dispositivos.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <rect x="5" y="2" width="14" height="20" rx="2"></rect>
+            <line x1="12" y1="18" x2="12.01" y2="18"></line>
+          </svg>
+          Receptores
+        </a>
+
+        <div class="nav-section">Simulación</div>
+        <a class="nav-item" href="test.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+            <polyline points="2 17 12 22 22 17"/>
+            <polyline points="2 12 12 17 22 12"/>
+          </svg>
+          Laboratorio de Pruebas
+        </a>
+
+        <div class="nav-section admin-only" style="display:none">Administración</div>
+        <a class="nav-item admin-only" href="usuarios.html" style="display:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+          Usuarios
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <div class="user-avatar" id="user-avatar">?</div>
+          <div>
+            <div class="user-name" id="user-name">—</div>
+            <div class="user-role" id="user-role">—</div>
+          </div>
+        </div>
+        <button class="nav-item" style="margin-top:8px;" onclick="logout()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+          </svg>
+          Cerrar sesión
+        </button>
+      </div>
+    </aside>
+
+    <!-- ── MAIN ──────────────────────────────────────── -->
+    <div class="main-content">
+      <div class="content fade-in">
+
+        <!-- App Connection Status (Subtle) -->
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 32px;">
+          <div class="badge" id="conn-chip">
+            <span class="sdot sdot-off" id="conn-dot" style="margin-right:6px;"></span>
+            <span id="conn-label">Conectando</span>
+          </div>
+        </div>
+
+        <!-- ── HERO SECTION ── -->
+        <div class="hero-section">
+          <div>
+            <h1 class="hero-title" id="greeting-saludo">Buen día</h1>
+            <p class="hero-sub">Resumen de lo que sucede en tu red hoy.</p>
+          </div>
+          <div style="display:flex; gap:12px;">
+            <a href="historial.html" class="btn btn-ghost">Ver historial</a>
+            <a href="sensores.html" class="btn btn-primary">Gestionar nodos</a>
+          </div>
+        </div>
+
+        <!-- ── METRICS STRIP ── -->
+        <div class="metrics-strip fade-in-d1">
+          <div class="metric-block">
+            <span class="metric-label">Alertas de Hoy</span>
+            <span class="metric-value" id="st-alerts">—</span>
+          </div>
+          <div class="metric-divider"></div>
+
+          <div class="metric-block">
+            <span class="metric-label">Sensores Activos</span>
+            <span class="metric-value" id="st-sensors">—</span>
+          </div>
+          <div class="metric-divider"></div>
+
+          <div class="metric-block">
+            <span class="metric-label">Última Alerta</span>
+            <span class="metric-value" id="st-last" style="font-size:32px; padding-top: 14px;">—</span>
+          </div>
+          <div class="metric-divider"></div>
+
+          <div class="metric-block">
+            <span class="metric-label">Estado de API</span>
+            <div style="margin-top: 12px; display:flex; align-items:center; gap:10px;">
+              <span class="pulse-dot" id="health-pulse"></span>
+              <span style="font-family:'Cal Sans', sans-serif; font-size:24px; color:var(--text-deep);"
+                id="st-status">Verificando</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── TOP TOOLBAR ── -->
+        <div class="top-toolbar fade-in-d2">
+          <div style="display:flex; gap:12px; align-items:center;">
+            <input class="form-input" id="alerts-search" type="search" placeholder="Buscar alertas por ubicación..." />
+          </div>
+          <div style="display:flex; gap:12px; align-items:center;">
+            <span class="toolbar-chip">Actualizado <strong id="last-refresh">—</strong></span>
+            <button class="btn btn-ghost btn-pill" id="refresh-btn" style="padding: 6px 16px;">Actualizar</button>
+            <label style="display:flex; align-items:center; gap:8px; font-size:13px; font-weight:500; cursor:pointer;">
+              <input type="checkbox" id="auto-refresh-toggle" checked style="accent-color:var(--blue);" />
+              Tiempo real
+            </label>
+          </div>
+        </div>
+
+        <!-- ── DASHBOARD GRID ── -->
+        <div class="dashboard-grid fade-in-d2">
+
+          <!-- Left: Chart & Alerts -->
+          <div style="display: flex; flex-direction: column; gap: 32px;">
+
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Resumen de Actividad</h3>
+              </div>
+              <div class="card-body">
+                <div class="chart-wrap">
+                  <canvas id="weekly-chart"></canvas>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Alertas Recientes</h3>
+                <a href="historial.html" class="btn btn-ghost btn-pill" style="font-size:12px; padding:4px 12px;">Ver
+                  todas</a>
+              </div>
+              <div class="alerts-list" id="alerts-list">
+                <div style="padding: 40px; text-align:center; color:var(--text-muted);">Cargando eventos...</div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Right: Sensors -->
+          <div class="card" style="align-self: start;">
+            <div class="card-header">
+              <h3 class="card-title">Nodos Sensores</h3>
+            </div>
+            <div class="sensors-list" id="sensors-grid">
+              <div style="padding: 40px; text-align:center; color:var(--text-muted);">Cargando nodos...</div>
+            </div>
+          </div>
+
+        </div>
+
+      </div><!-- /content -->
+    </div><!-- /main-content -->
+  </div><!-- /panel-layout -->
+
+  <div class="toast" id="toast">
+    <span class="toast-dot" id="toast-dot"></span>
+    <span id="toast-msg"></span>
+  </div>
+
+  <script src="shared.js"></script>
+  <script>
+    let latestAlerts = [];
+    let autoRefreshHandle = null;
+
+    /* ── Auth & Sidebar ────────────────────────── */
+    // Verificación async con el servidor como fuente de verdad
+    (async function initDashboard() {
+      const user = await authCheckServer();
+      if (!user) return; // authCheckServer ya redirige a login si falla
+
+      initSidebar(user);
+
+      const now = new Date();
+      const hour = now.getHours();
+      let saludo = "Buen día";
+      if (hour >= 12 && hour < 19) saludo = "Buenas tardes";
+      else if (hour >= 19) saludo = "Buenas noches";
+
+      document.getElementById('greeting-saludo').textContent = `${saludo}, ${user.username.split(' ')[0]}`;
+
+      attachDashboardEvents();
+      load();
+    })();
+
+    /* ── Connection chip ────────────────────────────── */
+    function setConn(live) {
+      const chip = document.getElementById('conn-chip');
+      const dot = document.getElementById('conn-dot');
+      const lbl = document.getElementById('conn-label');
+      const mConn = document.getElementById('mobile-conn');
+
+      if (live) {
+        chip.classList.add('badge-live');
+        dot.className = 'sdot sdot-on';
+        lbl.textContent = 'Sistema en vivo';
+        if (mConn) mConn.className = 'sdot sdot-on';
+      } else {
+        chip.classList.remove('badge-live');
+        dot.className = 'sdot sdot-off';
+        lbl.textContent = 'Desconectado';
+        if (mConn) mConn.className = 'sdot sdot-off';
+      }
+
+      const st = document.getElementById('st-status');
+      const pulse = document.getElementById('health-pulse');
+      st.textContent = live ? 'Operativo' : 'Fuera de línea';
+      pulse.style.background = live ? 'var(--green)' : 'var(--red)';
+      if (!live) pulse.style.animation = 'none';
+      else pulse.style.animation = 'pulse-ring 2s infinite';
+    }
+
+    /* ── Render alerts ──────────────────────────────── */
+    function renderAlerts(list) {
+      const el = document.getElementById('alerts-list');
+      if (!list.length) {
+        el.innerHTML = '<div style="padding:40px; text-align:center; color:var(--text-muted);">No hay alertas registradas recientemente.</div>';
+        return;
+      }
+      el.innerHTML = list.slice(0, 5).map((a) => {
+        const m = getType(a.type);
+        // Custom simple SVGs for minimal monochrome design
+        let customSVG = `<circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>`;
+
+        return `
+        <div class="alert-item">
+          <!-- Force black icon color for contrast against bright alert backgrounds -->
+          <div class="alert-icon" style="background:${m.bg}; color:#000000;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="color:#000000;">${customSVG}</svg>
+          </div>
+          <div style="flex:1;">
+            <div class="alert-title">${m.label}</div>
+            <div class="alert-desc">${a.location || 'Ubicación Desconocida'}</div>
+            <div class="alert-time">${timeAgo(a.triggered_at)}</div>
+          </div>
+          <div style="display:flex; gap:6px;">
+            <span class="badge" style="font-size:11px;">RF</span>
+            <span class="badge" style="font-size:11px;">Push</span>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    function filterAlerts() {
+      const input = document.getElementById('alerts-search');
+      if (!input) return;
+      const q = input.value.trim().toLowerCase();
+      if (!q) { renderAlerts(latestAlerts); return; }
+      const filtered = latestAlerts.filter((a) => {
+        const m = getType(a.type);
+        return (m.label || '').toLowerCase().includes(q) || (a.location || '').toLowerCase().includes(q);
+      });
+      renderAlerts(filtered);
+    }
+
+    /* ── Render sensors ─────────────────────────────── */
+    function renderSensors(list) {
+      const el = document.getElementById('sensors-grid');
+      if (!list.length) { el.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text-muted);">No se encontraron sensores</div>'; return; }
+      el.innerHTML = list.map(s => {
+        return `
+        <div class="sensor-item">
+          <div class="sensor-item-left">
+            <div style="background:var(--bg-gray); padding:8px; border-radius:8px; display:flex;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;color:var(--text-muted);"><rect x="4" y="4" width="16" height="16" rx="2"></rect><rect x="9" y="9" width="6" height="6"></rect></svg>
+            </div>
+            <div>
+              <div style="font-family:'Cal Sans', sans-serif; font-size:15px; color:var(--text-main); line-height:1.2;">${s.name}</div>
+              <div style="font-size:12px; color:var(--text-light); margin-top:2px;">${s.location || '—'}</div>
+            </div>
+          </div>
+          <span class="sdot ${s.is_active ? 'sdot-on' : 'sdot-off'}"></span>
+        </div>`;
+      }).join('');
+    }
+
+    function markRefreshTime() {
+      const el = document.getElementById('last-refresh');
+      if (!el) return;
+      const now = new Date();
+      el.textContent = now.toLocaleTimeString('es-AR', { hour: 'numeric', minute: '2-digit' });
+    }
+
+    function setRefreshing(loading) {
+      const btn = document.getElementById('refresh-btn');
+      if (!btn) return;
+      btn.disabled = loading;
+      btn.textContent = loading ? 'Actualizando...' : 'Actualizar';
+    }
+
+    function initAutoRefresh() {
+      const checkbox = document.getElementById('auto-refresh-toggle');
+      if (!checkbox) return;
+      const restartTimer = () => {
+        if (autoRefreshHandle) clearInterval(autoRefreshHandle);
+        if (!checkbox.checked) return;
+        autoRefreshHandle = setInterval(load, 15000);
+      };
+      checkbox.addEventListener('change', restartTimer);
+      restartTimer();
+    }
+
+    function attachDashboardEvents() {
+      const searchInput = document.getElementById('alerts-search');
+      const refreshBtn = document.getElementById('refresh-btn');
+      if (searchInput) searchInput.addEventListener('input', filterAlerts);
+      if (refreshBtn) refreshBtn.addEventListener('click', () => load(true));
+      initAutoRefresh();
+    }
+
+    /* ── Load data ──────────────────────────────────── */
+    async function load(manual = false) {
+      try {
+        if (manual) setRefreshing(true);
+        const [statsRes, alertsRes, sensorsRes, chartRes] = await Promise.all([
+          apiFetch('/api/stats'),
+          apiFetch('/api/alerts?per_page=5'),
+          apiFetch('/api/sensors'),
+          apiFetch('/api/stats/chart')
+        ]);
+        const stats = await statsRes.json();
+        const alertsData = await alertsRes.json();
+        const sensors = await sensorsRes.json();
+        const chart = await chartRes.json();
+
+        setConn(true);
+        markRefreshTime();
+
+        document.getElementById('st-alerts').textContent = stats.alerts_today ?? '—';
+        document.getElementById('st-sensors').textContent = `${stats.active_sensors}/${stats.total_sensors}`;
+        document.getElementById('st-last').textContent = stats.last_alert ? timeAgo(stats.last_alert) : '—';
+
+        latestAlerts = alertsData.items || [];
+        filterAlerts();
+        renderSensors(sensors);
+
+        if (chart.length) {
+          const canvas = document.getElementById('weekly-chart');
+          canvas._data = chart;
+          // Use pure white for bars in dark mode
+          drawBarChart('weekly-chart', chart, '#ffffff');
+        }
+      } catch (e) {
+        console.error('Load error:', e);
+        setConn(false);
+        showToast('No se pudo conectar a la API', false);
+      } finally {
+        setRefreshing(false);
+      }
+    }
+
+    window.addEventListener('resize', () => {
+      const canvas = document.getElementById('weekly-chart');
+      if (canvas && canvas._data) drawBarChart('weekly-chart', canvas._data, '#ffffff');
+    });
+  </script>
+</body>
+
+</html>

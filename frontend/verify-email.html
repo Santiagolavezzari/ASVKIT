@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ASV Kit · Verificar Correo</title>
+  <meta name="description" content="Verificá tu correo electrónico para activar tu cuenta de ASV Kit." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #000000;
+      --bg2: #0d0d10;
+      --border: rgba(255, 255, 255, 0.10);
+      --text: #f5f5f7;
+      --text2: rgba(245, 245, 247, 0.62);
+      --text3: rgba(245, 245, 247, 0.38);
+      --blue: #0071e3;
+      --blue2: #2997ff;
+      --green: #30d158;
+      --red: #ff453a;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Background glow ── */
+    .bg-orb {
+      pointer-events: none;
+      position: fixed;
+      z-index: 0;
+      width: 600px;
+      height: 600px;
+      border-radius: 50%;
+      filter: blur(100px);
+      opacity: 0.12;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: radial-gradient(circle, rgba(0, 113, 227, 1) 0%, transparent 70%);
+    }
+
+    /* ── Card ── */
+    .card {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 440px;
+      background: linear-gradient(160deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015));
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 48px 40px;
+      text-align: center;
+      backdrop-filter: blur(20px);
+      animation: fadeUp .5s ease both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Icon ── */
+    .icon-wrap {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      margin: 0 auto 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--border);
+      transition: background .4s, border-color .4s;
+    }
+
+    .icon-wrap.loading {
+      background: rgba(255,255,255,0.04);
+    }
+
+    .icon-wrap.success {
+      background: rgba(48, 209, 88, 0.12);
+      border-color: rgba(48, 209, 88, 0.3);
+    }
+
+    .icon-wrap.error {
+      background: rgba(255, 69, 58, 0.10);
+      border-color: rgba(255, 69, 58, 0.28);
+    }
+
+    .icon-wrap svg {
+      width: 36px;
+      height: 36px;
+    }
+
+    /* Spinner */
+    .spinner {
+      width: 36px;
+      height: 36px;
+      border: 3px solid rgba(255,255,255,0.1);
+      border-top-color: var(--blue2);
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .card-title {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -.4px;
+      margin-bottom: 10px;
+    }
+
+    .card-desc {
+      font-size: 14px;
+      color: var(--text2);
+      line-height: 1.65;
+      margin-bottom: 32px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 12px 24px;
+      border-radius: 10px;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: opacity .15s, transform .1s;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .btn:hover { opacity: .88; transform: translateY(-1px); }
+
+    .btn-primary {
+      background: var(--blue);
+      color: #fff;
+    }
+
+    .btn-ghost {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+      color: var(--text2);
+    }
+
+    .btn-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: center;
+    }
+
+    /* ── Resend form ── */
+    .resend-form {
+      display: none;
+      margin-top: 24px;
+      border-top: 1px solid var(--border);
+      padding-top: 24px;
+    }
+
+    .resend-form.visible { display: block; }
+
+    .resend-form label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-bottom: 8px;
+      text-align: left;
+    }
+
+    .resend-form input {
+      width: 100%;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 11px 14px;
+      font-size: 14px;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      outline: none;
+      margin-bottom: 12px;
+      transition: border-color .2s;
+    }
+
+    .resend-form input:focus {
+      border-color: var(--blue2);
+    }
+
+    .msg {
+      font-size: 13px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      margin-top: 10px;
+      text-align: left;
+    }
+
+    .msg.ok  { background: rgba(48,209,88,.1); color: var(--green); border: 1px solid rgba(48,209,88,.2); }
+    .msg.err { background: rgba(255,69,58,.1); color: var(--red);   border: 1px solid rgba(255,69,58,.2); }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 36px;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    .logo-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--blue);
+      box-shadow: 0 0 8px var(--blue);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="bg-orb" aria-hidden="true"></div>
+
+  <div class="card" id="card">
+    <a class="logo" href="/">
+      <span class="logo-dot"></span>
+      ASV Kit
+    </a>
+
+    <!-- Estado: cargando -->
+    <div id="state-loading">
+      <div class="icon-wrap loading" id="icon-wrap">
+        <div class="spinner"></div>
+      </div>
+      <p class="card-title">Verificando tu correo…</p>
+      <p class="card-desc">Por favor esperá un momento.</p>
+    </div>
+
+    <!-- Estado: éxito -->
+    <div id="state-success" style="display:none">
+      <div class="icon-wrap success">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#30d158" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 6L9 17l-5-5"/>
+        </svg>
+      </div>
+      <p class="card-title">¡Correo verificado!</p>
+      <p class="card-desc">Tu cuenta está activa. Ya podés iniciar sesión en ASV Kit.</p>
+      <div class="btn-group">
+        <a class="btn btn-primary" href="/login.html" id="btn-login">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+            <polyline points="10 17 15 12 10 7"/>
+            <line x1="15" y1="12" x2="3" y2="12"/>
+          </svg>
+          Iniciar sesión
+        </a>
+      </div>
+    </div>
+
+    <!-- Estado: error -->
+    <div id="state-error" style="display:none">
+      <div class="icon-wrap error">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#ff453a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+      </div>
+      <p class="card-title" id="err-title">Link inválido o expirado</p>
+      <p class="card-desc" id="err-desc">Este link de verificación no es válido o ya fue utilizado.</p>
+      <div class="btn-group">
+        <button class="btn btn-primary" id="btn-show-resend" onclick="showResend()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"/>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+          </svg>
+          Reenviar link de verificación
+        </button>
+        <a class="btn btn-ghost" href="/login.html">Ir al login</a>
+      </div>
+
+      <!-- Formulario de reenvío -->
+      <div class="resend-form" id="resend-form">
+        <label for="resend-email">Tu correo electrónico</label>
+        <input type="email" id="resend-email" placeholder="nombre@ejemplo.com" autocomplete="email" />
+        <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="resendVerification()">
+          Enviar nuevo link
+        </button>
+        <div id="resend-msg" style="display:none"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API = 'http://localhost:5000';
+
+    function setState(state) {
+      document.getElementById('state-loading').style.display = state === 'loading' ? '' : 'none';
+      document.getElementById('state-success').style.display = state === 'success' ? '' : 'none';
+      document.getElementById('state-error').style.display   = state === 'error'   ? '' : 'none';
+    }
+
+    function showResend() {
+      document.getElementById('resend-form').classList.add('visible');
+      document.getElementById('btn-show-resend').style.display = 'none';
+      // Pre-fill si hay email guardado
+      const saved = sessionStorage.getItem('verify_email');
+      if (saved) document.getElementById('resend-email').value = saved;
+    }
+
+    async function resendVerification() {
+      const email = document.getElementById('resend-email').value.trim();
+      const msgEl = document.getElementById('resend-msg');
+      msgEl.style.display = 'none';
+
+      if (!email) {
+        msgEl.className = 'msg err';
+        msgEl.textContent = 'Ingresá tu correo electrónico.';
+        msgEl.style.display = 'block';
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API}/api/auth/resend-verification`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+        const data = await res.json();
+        msgEl.className = res.ok ? 'msg ok' : 'msg err';
+        msgEl.textContent = data.message || data.error || 'Ocurrió un error.';
+        msgEl.style.display = 'block';
+      } catch {
+        msgEl.className = 'msg err';
+        msgEl.textContent = 'No se pudo conectar con el servidor.';
+        msgEl.style.display = 'block';
+      }
+    }
+
+    async function verifyToken() {
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get('token');
+
+      if (!token) {
+        setState('error');
+        document.getElementById('err-title').textContent = 'Link inválido';
+        document.getElementById('err-desc').textContent = 'No se encontró un token de verificación en este link.';
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API}/api/auth/verify-email?token=${encodeURIComponent(token)}`);
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          setState('success');
+        } else {
+          setState('error');
+          if (data.code === 'token_expired') {
+            document.getElementById('err-title').textContent = 'Link expirado';
+            document.getElementById('err-desc').textContent = 'Este link de verificación expiró (válido por 24 horas). Pedí uno nuevo.';
+            if (data.email) sessionStorage.setItem('verify_email', data.email);
+          } else {
+            document.getElementById('err-title').textContent = 'Link inválido';
+            document.getElementById('err-desc').textContent = data.error || 'Este link no es válido o ya fue utilizado.';
+          }
+        }
+      } catch {
+        setState('error');
+        document.getElementById('err-title').textContent = 'Error de conexión';
+        document.getElementById('err-desc').textContent = 'No se pudo conectar con el servidor. Verificá tu conexión e intentá de nuevo.';
+      }
+    }
+
+    verifyToken();
+  </script>
+</body>
+</html>

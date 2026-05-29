@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ASV Kit · Identificación Automática</title>
+  <meta name="description" content="Autenticación de acceso a la intranet de ASV Kit." />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px;
+      background: var(--bg-subtle);
+    }
+
+    .login-wrap {
+      width: 100%;
+      max-width: 380px;
+      animation: fadeIn .5s ease both;
+    }
+
+    .login-logo {
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 32px;
+    }
+
+    #login-card {
+      padding: 32px 28px;
+    }
+
+    /* ── Header ────────────────────────────────────────── */
+    .login-header { margin-bottom: 32px; }
+    .login-title {
+      font-family: 'Cal Sans', sans-serif; font-size: 24px;
+      color: var(--text-main); line-height: 1.1; margin-bottom: 8px;
+    }
+    .login-sub { font-size: 14px; color: var(--text-muted); line-height: 1.5; }
+
+    /* ── Input overrides ─────────────────────────────── */
+    .form-group { margin-bottom: 20px; }
+    .form-label { font-size: 13px; font-weight: 500; margin-bottom: 8px; color: var(--text-deep); }
+    
+    .input-wrap { position: relative; }
+    .input-icon {
+      position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+      width: 16px; height: 16px; color: var(--text-muted);
+      pointer-events: none; transition: color .2s;
+    }
+    .input-wrap .form-input { padding-left: 36px; padding-right: 12px; background: var(--bg); border: 1px solid rgba(255,255,255,0.1); box-shadow: none; font-size: 14px; }
+    .input-wrap .form-input:focus { border-color: rgba(255,255,255,0.2); box-shadow: 0 0 0 2px rgba(255,255,255,0.05); }
+    .input-wrap .form-input:focus ~ .input-icon { color: var(--text-main); }
+
+    .pw-toggle {
+      position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; cursor: pointer; color: var(--text-muted);
+      padding: 4px; display: flex; align-items: center; justify-content: center;
+      transition: color .15s;
+    }
+    .pw-toggle:hover { color: var(--text-main); }
+    .pw-toggle svg { width: 16px; height: 16px; }
+    .input-wrap.has-toggle .form-input { padding-right: 40px; }
+
+    /* ── Options row ─────────────────────────────────── */
+    .login-options { display: flex; align-items: center; justify-content: space-between; margin: -4px 0 24px; font-size: 13px; }
+    .check-label { display: flex; align-items: center; gap: 8px; color: var(--text-muted); cursor: pointer; user-select: none; }
+    .check-label input[type="checkbox"] {
+      appearance: none; width: 16px; height: 16px; cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.2); border-radius: 4px;
+      background: rgba(255,255,255,0.04); transition: border-color .2s, background .2s;
+      position: relative; flex-shrink: 0;
+    }
+    .check-label input[type="checkbox"]:checked {
+      background: var(--text-main); border-color: var(--text-main);
+    }
+    .check-label input[type="checkbox"]:checked::after {
+      content: ''; position: absolute; left: 4px; top: 1px;
+      width: 4px; height: 8px; border: 2px solid #000;
+      border-top: none; border-left: none; transform: rotate(45deg);
+    }
+
+    /* ── Error banner ────────────────────────────────── */
+    .login-error {
+      background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2);
+      color: var(--red); border-radius: var(--radius); padding: 10px 14px;
+      font-size: 13px; font-weight: 500; margin-bottom: 20px;
+      display: none; align-items: flex-start; gap: 8px; line-height: 1.4;
+    }
+    .login-error.show { display: flex; animation: errorIn .3s ease both; }
+    .login-error svg { width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px; }
+
+    @keyframes errorIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+    @keyframes shakeCard {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-4px); }
+      40%, 80% { transform: translateX(4px); }
+    }
+    .shake { animation: shakeCard .4s; }
+
+    /* ── Submit button ───────────────────────────────── */
+    .login-btn { width: 100%; padding: 10px 16px; font-size: 14px; margin-bottom: 20px; }
+    .login-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    /* ── Security note ──────────────────────────────── */
+    .security-hint {
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      font-size: 12px; color: var(--text-muted);
+    }
+    .security-hint svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+    /* ── Footer link ─────────────────────────────────── */
+    .login-footer { text-align: center; margin-top: 32px; font-size: 13px; font-weight: 500; }
+    .login-footer a { color: var(--text-muted); text-decoration: none; transition: color .15s; }
+    .login-footer a:hover { color: var(--text-main); }
+  </style>
+</head>
+
+<body>
+  <div class="login-wrap">
+    <!-- Logo -->
+    <div class="login-logo">
+      <a href="index.html" title="Volver al inicio" style="display:flex;align-items:center;opacity:1;transition:opacity .2s;" onmouseover="this.style.opacity='.7'" onmouseout="this.style.opacity='1'">
+        <img src="asv-logo.png" alt="ASV Logo" style="height:28px; width:auto; filter:brightness(0) invert(1);" />
+      </a>
+    </div>
+
+    <!-- Card -->
+    <div class="card" id="login-card">
+      <!-- Header -->
+      <div class="login-header">
+        <div class="login-title">Bienvenido de vuelta</div>
+        <p class="login-sub">Ingresa a tu panel de control de ASV Kit.</p>
+      </div>
+
+      <!-- Error -->
+      <div class="login-error" id="login-error" role="alert">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <span id="login-error-text">Credenciales inválidas.</span>
+      </div>
+
+      <!-- Username -->
+      <div class="form-group">
+        <label class="form-label" for="username">Usuario</label>
+        <div class="input-wrap">
+          <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <input class="form-input" type="text" id="username" placeholder="ej. admin" autocomplete="username" autofocus />
+        </div>
+      </div>
+
+      <!-- Password -->
+      <div class="form-group mb-0">
+        <label class="form-label" for="password">Contraseña</label>
+        <div class="input-wrap has-toggle">
+          <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <input class="form-input" type="password" id="password" placeholder="••••••••" autocomplete="current-password" />
+          <button type="button" class="pw-toggle" id="pw-toggle" aria-label="Mostrar contraseña" onclick="togglePassword()">
+            <svg id="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg id="eye-off-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Options row -->
+      <div class="login-options">
+        <label class="check-label" for="remember-me">
+          <input type="checkbox" id="remember-me" />
+          Mantener sesión iniciada
+        </label>
+        <a href="reset-password.html" style="color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;transition:color .15s;" onmouseover="this.style.color='var(--text-main)'" onmouseout="this.style.color='var(--text-muted)'">
+          ¿Olvidaste tu contraseña?
+        </a>
+      </div>
+
+      <!-- Submit -->
+      <button class="btn btn-primary login-btn" id="login-btn" onclick="doLogin()">
+        Iniciar sesión
+      </button>
+
+      <!-- Security note -->
+      <div class="security-hint">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Bloqueo de cuenta activo tras 5 intentos fallidos
+      </div>
+      <!-- Server status -->
+      <div id="server-status" style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:14px;font-size:12px;color:rgba(255,255,255,0.3)">
+        <span id="status-dot" style="width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.15);flex-shrink:0;transition:background .3s"></span>
+        <span id="status-text">Verificando conexión...</span>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="login-footer">
+      <div style="margin-bottom: 16px;">
+        <span style="color: var(--text-muted);">¿No tienes cuenta?</span> 
+        <a href="register.html" style="color: var(--text-main); font-weight: 600;">Regístrate aquí</a>
+      </div>
+      <a href="index.html">⟵ Volver al inicio</a>
+    </div>
+  </div>
+
+  <script>
+    const API = 'http://127.0.0.1:5000';
+
+    // Auto-redirect solo si el servidor confirma que hay sesión activa.
+    // Evita el bug: datos viejos en localStorage → dashboard sin sesión → 401 → login.
+    (async function checkExistingSession() {
+      const raw = localStorage.getItem('asvkit_user') || sessionStorage.getItem('asvkit_user');
+      if (!raw) return; // No hay datos locales, mostrar login normalmente
+
+      try {
+        const u = JSON.parse(raw);
+        if (!u || !u.id) throw new Error('bad');
+      } catch {
+        localStorage.removeItem('asvkit_user');
+        sessionStorage.removeItem('asvkit_user');
+        return;
+      }
+
+      // Verificar con el servidor si la cookie de sesión sigue viva
+      try {
+        const res = await fetch(API + '/api/auth/session', {
+          credentials: 'include',
+          signal: AbortSignal.timeout(4000)
+        });
+        if (res.ok) {
+          // Sesión válida en el servidor → redirigir
+          window.location.href = 'dashboard.html';
+        } else {
+          // Sesión expirada en el servidor → limpiar y mostrar login
+          localStorage.removeItem('asvkit_user');
+          sessionStorage.removeItem('asvkit_user');
+        }
+      } catch {
+        // Sin conexión → limpiar datos para evitar loops y mostrar login
+        localStorage.removeItem('asvkit_user');
+        sessionStorage.removeItem('asvkit_user');
+      }
+    })();
+
+    // Server status check
+    (async function checkServerStatus() {
+      const dot  = document.getElementById('status-dot');
+      const text = document.getElementById('status-text');
+      try {
+        const res = await fetch(API + '/api/auth/session', {
+          credentials: 'include',
+          signal: AbortSignal.timeout(3500)
+        });
+        // Any response (200 or 401) means server is up
+        dot.style.background  = '#10B981';
+        dot.style.boxShadow   = '0 0 6px rgba(16,185,129,0.6)';
+        text.textContent = 'Servidor disponible';
+        text.style.color = 'rgba(16,185,129,0.7)';
+      } catch {
+        dot.style.background = '#EF4444';
+        dot.style.boxShadow  = '0 0 6px rgba(239,68,68,0.5)';
+        text.textContent = 'Servidor no disponible — verificá que el backend esté corriendo';
+        text.style.color = 'rgba(239,68,68,0.7)';
+        text.style.maxWidth = '280px';
+        text.style.textAlign = 'center';
+        text.style.lineHeight = '1.4';
+      }
+    })();
+
+    document.getElementById('username').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('password').focus(); });
+    document.getElementById('password').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+    function togglePassword() {
+      const input  = document.getElementById('password');
+      const eyeOn  = document.getElementById('eye-icon');
+      const eyeOff = document.getElementById('eye-off-icon');
+      const toggle = document.getElementById('pw-toggle');
+      const visible = input.type === 'password';
+      input.type = visible ? 'text' : 'password';
+      eyeOn.style.display  = visible ? 'none'  : '';
+      eyeOff.style.display = visible ? ''      : 'none';
+      toggle.setAttribute('aria-label', visible ? 'Ocultar credencial' : 'Mostrar credencial');
+    }
+
+    function showError(msg) {
+      const err = document.getElementById('login-error');
+      const card = document.getElementById('login-card');
+      document.getElementById('login-error-text').textContent = msg;
+      err.classList.add('show');
+      err.style.animation = 'none';
+      err.offsetHeight;
+      err.style.animation = '';
+      card.classList.add('shake');
+      setTimeout(() => card.classList.remove('shake'), 400);
+    }
+    function hideError() { document.getElementById('login-error').classList.remove('show'); }
+
+    async function doLogin() {
+      const btn      = document.getElementById('login-btn');
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+      const remember = document.getElementById('remember-me').checked;
+
+      if (!username || !password) { showError('Ingresa tu usuario y contraseña.'); return; }
+      btn.textContent = 'Iniciando sesión...'; btn.disabled = true; hideError();
+
+      try {
+        const res  = await fetch(API + '/api/auth/login', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          credentials: 'include', body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          const userData = { id: data.id, username: data.username, role: data.role };
+          if (remember) {
+            localStorage.setItem('asvkit_user', JSON.stringify(userData));
+            sessionStorage.setItem('asvkit_user', JSON.stringify(userData));
+          } else {
+            // Solo sessionStorage: se borra al cerrar el navegador
+            sessionStorage.setItem('asvkit_user', JSON.stringify(userData));
+            localStorage.removeItem('asvkit_user');
+          }
+          window.location.href = 'dashboard.html';
+        } else if (data.code === 'email_not_verified') {
+          // Correo sin verificar — mostrar banner especial
+          showError(data.error || 'Correo no verificado.');
+          const errEl = document.getElementById('login-error');
+          // Agregar botón de reenvío debajo del error si no existe
+          if (!document.getElementById('resend-btn')) {
+            const resendBtn = document.createElement('button');
+            resendBtn.id = 'resend-btn';
+            resendBtn.textContent = 'Reenviar link de verificación';
+            resendBtn.style.cssText = 'margin-top:10px;width:100%;padding:9px 14px;font-size:13px;font-weight:600;background:rgba(41,151,255,0.12);color:#2997ff;border:1px solid rgba(41,151,255,0.28);border-radius:8px;cursor:pointer;font-family:inherit;';
+            resendBtn.onclick = () => resendVerification(data.email);
+            errEl.insertAdjacentElement('afterend', resendBtn);
+          }
+          btn.textContent = 'Iniciar sesión'; btn.disabled = false;
+        } else {
+          showError(data.error || 'Credenciales incorrectas.');
+          btn.textContent = 'Iniciar sesión'; btn.disabled = false;
+          if (res.status === 429) { btn.textContent = 'Cuenta bloqueada'; btn.disabled = true; }
+        }
+      } catch {
+        showError('Error de conexión con el servidor.');
+        btn.textContent = 'Iniciar sesión'; btn.disabled = false;
+      }
+    }
+
+    async function resendVerification(email) {
+      const btn = document.getElementById('resend-btn');
+      btn.textContent = 'Enviando...'; btn.disabled = true;
+      try {
+        const res = await fetch(API + '/api/auth/resend-verification', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email || document.getElementById('username').value.trim() })
+        });
+        const data = await res.json();
+        btn.textContent = data.message || '¡Link enviado! Revisá tu correo.';
+        btn.style.background = 'rgba(48,209,88,0.1)';
+        btn.style.color = '#30d158';
+        btn.style.borderColor = 'rgba(48,209,88,0.28)';
+      } catch {
+        btn.textContent = 'Error al enviar. Intentá de nuevo.';
+        btn.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>

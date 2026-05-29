@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ASV Kit · Panel de Simulación y Testeo</title>
+  <meta name="description" content="Vista de pruebas para simular disparos de sensores y entregas de alertas." />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .sim-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      margin-bottom: 48px;
+    }
+
+    @media(max-width: 1024px) {
+      .sim-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .quick-simulate-btn {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      padding: 16px 20px;
+      background: var(--bg-gray);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: var(--radius);
+      color: var(--text-main);
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+      text-align: left;
+      margin-bottom: 12px;
+    }
+
+    .quick-simulate-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: translateX(4px);
+    }
+
+    .quick-simulate-btn:active {
+      transform: scale(0.98) translateX(4px);
+    }
+
+    .quick-simulate-btn .sensor-icon-circle {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 14px;
+      flex-shrink: 0;
+    }
+
+    .sim-table-actions .btn {
+      padding: 4px 10px;
+      font-size: 12px;
+    }
+
+    .live-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      color: var(--green);
+      padding: 2px 8px;
+      border-radius: var(--radius-pill);
+      font-weight: 500;
+    }
+
+    .live-log-item {
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 13px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      animation: highlightPulse 2s ease-out;
+    }
+
+    .live-log-item:last-child {
+      border-bottom: none;
+    }
+
+    @keyframes highlightPulse {
+      0% { background: rgba(59, 130, 246, 0.15); }
+      100% { background: transparent; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Mobile Topbar -->
+  <div class="mobile-topbar">
+    <div style="font-family: 'Cal Sans', sans-serif; font-size: 18px; font-weight: 600;">ASV Kit (Test)</div>
+  </div>
+
+  <div class="panel-layout">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <a class="sidebar-logo" href="index.html">
+        <img src="asv-logo.png" alt="ASV Kit Logo" />
+      </a>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section">Aplicación</div>
+        <a class="nav-item" href="dashboard.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <rect x="3" y="3" width="7" height="7"></rect>
+            <rect x="14" y="3" width="7" height="7"></rect>
+            <rect x="14" y="14" width="7" height="7"></rect>
+            <rect x="3" y="14" width="7" height="7"></rect>
+          </svg>
+          Dashboard
+        </a>
+        <a class="nav-item" href="historial.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+          Historial de Alertas
+        </a>
+
+        <div class="nav-section">Hardware</div>
+        <a class="nav-item" href="sensores.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <rect x="4" y="4" width="16" height="16" rx="2"></rect>
+            <rect x="9" y="9" width="6" height="6"></rect>
+            <line x1="9" y1="2" x2="9" y2="4"></line>
+            <line x1="15" y1="2" x2="15" y2="4"></line>
+            <line x1="9" y1="20" x2="9" y2="22"></line>
+            <line x1="15" y1="20" x2="15" y2="22"></line>
+            <line x1="20" y1="9" x2="22" y2="9"></line>
+            <line x1="20" y1="14" x2="22" y2="14"></line>
+            <line x1="2" y1="9" x2="4" y2="9"></line>
+            <line x1="2" y1="14" x2="4" y2="14"></line>
+          </svg>
+          Sensores
+        </a>
+        <a class="nav-item" href="dispositivos.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <rect x="5" y="2" width="14" height="20" rx="2"></rect>
+            <line x1="12" y1="18" x2="12.01" y2="18"></line>
+          </svg>
+          Receptores
+        </a>
+
+        <div class="nav-section">Simulación</div>
+        <a class="nav-item active" href="test.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+            <polyline points="2 17 12 22 22 17"/>
+            <polyline points="2 12 12 17 22 12"/>
+          </svg>
+          Laboratorio de Pruebas
+        </a>
+
+        <div class="nav-section admin-only" style="display:none">Administración</div>
+        <a class="nav-item admin-only" href="usuarios.html" style="display:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+          Usuarios
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <div class="user-avatar" id="user-avatar">?</div>
+          <div>
+            <div class="user-name" id="user-name">—</div>
+            <div class="user-role" id="user-role">—</div>
+          </div>
+        </div>
+        <button class="nav-item" style="margin-top:8px;" onclick="logout()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+          </svg>
+          Cerrar sesión
+        </button>
+      </div>
+    </aside>
+
+    <div class="main-content">
+      <div class="content fade-in">
+
+        <!-- HERO -->
+        <div class="page-header">
+          <h1 class="page-title">Laboratorio de Pruebas</h1>
+          <p class="page-sub">Simulá pulsos de radiofrecuencia (RF) y envíos de alertas sin hardware real.</p>
+        </div>
+
+        <div class="sim-grid">
+          <!-- Left Column: Actions -->
+          <div style="display: flex; flex-direction: column; gap: 32px;">
+
+            <!-- Quick Simulator Cards -->
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Simulaciones Rápidas (Códigos Estándar)</h3>
+              </div>
+              <div class="card-body" style="padding: 20px 24px;">
+                <button class="quick-simulate-btn" onclick="sendQuickAlert('doorbell_A1')">
+                  <div style="display:flex; align-items:center;">
+                    <div class="sensor-icon-circle" style="background:rgba(59, 130, 246, 0.15); color:var(--blue);">
+                      🔔
+                    </div>
+                    <div>
+                      <div style="font-weight:600;">Simular Timbre</div>
+                      <div style="font-size:12px; color:var(--text-muted);">Código: doorbell_A1</div>
+                    </div>
+                  </div>
+                  <span class="btn btn-ghost" style="padding:4px 10px; font-size:12px;">Disparar</span>
+                </button>
+
+                <button class="quick-simulate-btn" onclick="sendQuickAlert('smoke_K3')">
+                  <div style="display:flex; align-items:center;">
+                    <div class="sensor-icon-circle" style="background:rgba(239, 68, 68, 0.15); color:var(--red);">
+                      🔥
+                    </div>
+                    <div>
+                      <div style="font-weight:600;">Simular Sensor de Humo</div>
+                      <div style="font-size:12px; color:var(--text-muted);">Código: smoke_K3</div>
+                    </div>
+                  </div>
+                  <span class="btn btn-ghost" style="padding:4px 10px; font-size:12px;">Disparar</span>
+                </button>
+
+                <button class="quick-simulate-btn" onclick="sendQuickAlert('washer_M2')">
+                  <div style="display:flex; align-items:center;">
+                    <div class="sensor-icon-circle" style="background:rgba(20, 184, 166, 0.15); color:var(--teal);">
+                      🌀
+                    </div>
+                    <div>
+                      <div style="font-weight:600;">Simular Lavadora Lista</div>
+                      <div style="font-size:12px; color:var(--text-muted);">Código: washer_M2</div>
+                    </div>
+                  </div>
+                  <span class="btn btn-ghost" style="padding:4px 10px; font-size:12px;">Disparar</span>
+                </button>
+
+                <button class="quick-simulate-btn" onclick="sendQuickAlert('door_window_P1')">
+                  <div style="display:flex; align-items:center;">
+                    <div class="sensor-icon-circle" style="background:rgba(245, 158, 11, 0.15); color:var(--amber);">
+                      🚪
+                    </div>
+                    <div>
+                      <div style="font-weight:600;">Simular Puerta / Ventana</div>
+                      <div style="font-size:12px; color:var(--text-muted);">Código: door_window_P1</div>
+                    </div>
+                  </div>
+                  <span class="btn btn-ghost" style="padding:4px 10px; font-size:12px;">Disparar</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Custom Simulator Form -->
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Inyección Manual de Alertas</h3>
+              </div>
+              <div class="card-body">
+                <div class="form-group">
+                  <label class="form-label">Código de Sensor (rf_code)</label>
+                  <input class="form-input" id="sim-rf-code" placeholder="Ej: doorbell_A1, o código registrado" />
+                  <span style="font-size:11px; color:var(--text-light); margin-top:4px; display:block;">
+                    Nota: El código debe coincidir con un sensor registrado y activo en el sistema para que la alerta sea procesada.
+                  </span>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+                  <div class="form-group">
+                    <label class="form-label">Estado Entrega RF</label>
+                    <select class="form-select" id="sim-rf-status">
+                      <option value="sent">Enviado (sent)</option>
+                      <option value="pending">Pendiente (pending)</option>
+                      <option value="failed">Fallido (failed)</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Estado Entrega Push</label>
+                    <select class="form-select" id="sim-push-status">
+                      <option value="sent">Enviado (sent)</option>
+                      <option value="pending">Pendiente (pending)</option>
+                      <option value="failed">Fallido (failed)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Notas Adicionales</label>
+                  <input class="form-input" id="sim-notes" placeholder="Ej: Simulación manual de laboratorio" value="Simulación manual de laboratorio" />
+                </div>
+
+                <div style="display:flex; justify-content:flex-end;">
+                  <button class="btn btn-primary" id="sim-submit-btn" onclick="sendCustomAlert()">
+                    Emitir Alerta
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Right Column: Database Sensors & Live Log -->
+          <div style="display: flex; flex-direction: column; gap: 32px;">
+
+            <!-- Registered Sensors Quick List -->
+            <div class="card">
+              <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+                <h3 class="card-title">Sensores Registrados</h3>
+                <button class="btn btn-ghost btn-pill" onclick="loadSensors()" style="font-size:11px; padding:2px 10px;">Refrescar</button>
+              </div>
+              <div class="table-wrap" style="max-height: 270px; overflow-y: auto;">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Nombre / Ubicación</th>
+                      <th>Código RF</th>
+                      <th>Acción</th>
+                    </tr>
+                  </thead>
+                  <tbody id="sim-sensors-tbody">
+                    <tr><td colspan="3" class="empty">Cargando sensores de la base de datos...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Live Alarms Monitor -->
+            <div class="card">
+              <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+                <h3 class="card-title">Log de Alertas Recientes</h3>
+                <span class="live-indicator"><span class="sdot sdot-on" style="width:6px; height:6px;"></span>En vivo</span>
+              </div>
+              <div class="alerts-list" id="sim-live-log" style="max-height: 300px; overflow-y: auto;">
+                <div style="padding: 24px; text-align:center; color:var(--text-muted);">Cargando últimas alertas...</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div><!-- /content -->
+    </div><!-- /main-content -->
+  </div><!-- /panel-layout -->
+
+  <div class="toast" id="toast">
+    <div class="toast-dot" id="toast-dot"></div>
+    <span id="toast-msg"></span>
+  </div>
+
+  <script src="shared.js"></script>
+  <script>
+    const user = authCheck();
+    if (user) initSidebar(user);
+
+    let registeredSensors = [];
+    let logInterval = null;
+
+    // Load registered sensors from backend database
+    async function loadSensors() {
+      const tbody = document.getElementById('sim-sensors-tbody');
+      try {
+        const res = await apiFetch('/api/sensors');
+        registeredSensors = await res.json();
+        
+        const activeSensors = registeredSensors.filter(s => s.is_active);
+        
+        if (!activeSensors.length) {
+          tbody.innerHTML = '<tr><td colspan="3" class="empty">No hay sensores activos registrados. Agregá uno en la pestaña Sensores.</td></tr>';
+          return;
+        }
+        
+        tbody.innerHTML = activeSensors.map(s => {
+          return `
+          <tr>
+            <td>
+              <div style="font-weight:600; font-size:13px;">${s.name}</div>
+              <div style="font-size:11px; color:var(--text-muted);">${s.location || 'Sin ubicación'}</div>
+            </td>
+            <td>
+              <code style="font-family:monospace; font-size:12px; background:var(--bg-gray); padding:2px 6px; border-radius:4px;">${s.rf_code}</code>
+            </td>
+            <td class="sim-table-actions">
+              <button class="btn btn-primary" onclick="sendQuickAlert('${s.rf_code.replace(/'/g, "\\'")}')">Disparar</button>
+            </td>
+          </tr>`;
+        }).join('');
+      } catch (err) {
+        tbody.innerHTML = '<tr><td colspan="3" class="empty">Error al conectar con la base de datos de sensores.</td></tr>';
+      }
+    }
+
+    // Trigger alert with custom data
+    async function triggerAlert(rfCode, deliveryRf = 'sent', deliveryPush = 'sent', notes = 'Simulación') {
+      try {
+        const res = await apiFetch('/api/alerts', {
+          method: 'POST',
+          body: JSON.stringify({
+            rf_code: rfCode,
+            delivery_rf: deliveryRf,
+            delivery_push: deliveryPush,
+            notes: notes
+          })
+        });
+        
+        const data = await res.json();
+        if (res.ok) {
+          showToast(`Señal RF inyectada: ${rfCode}`);
+          loadRecentAlerts(); // Immediate reload
+        } else {
+          showToast(data.error || 'Código no procesado por el servidor', false);
+        }
+      } catch (err) {
+        showToast('Error de red al enviar la simulación', false);
+      }
+    }
+
+    // Trigger standard alert quickly
+    function sendQuickAlert(rfCode) {
+      triggerAlert(rfCode, 'sent', 'sent', 'Simulación rápida desde Laboratorio');
+    }
+
+    // Trigger alert from manual form inputs
+    function sendCustomAlert() {
+      const rfCode = document.getElementById('sim-rf-code').value.trim();
+      const deliveryRf = document.getElementById('sim-rf-status').value;
+      const deliveryPush = document.getElementById('sim-push-status').value;
+      const notes = document.getElementById('sim-notes').value.trim();
+
+      if (!rfCode) {
+        showToast('Debes ingresar un código de sensor (rf_code)', false);
+        return;
+      }
+
+      const btn = document.getElementById('sim-submit-btn');
+      btn.disabled = true;
+      btn.textContent = 'Enviando...';
+
+      triggerAlert(rfCode, deliveryRf, deliveryPush, notes || 'Simulación manual');
+
+      setTimeout(() => {
+        btn.disabled = false;
+        btn.textContent = 'Emitir Alerta';
+      }, 500);
+    }
+
+    // Load recent log of alerts
+    async function loadRecentAlerts() {
+      const el = document.getElementById('sim-live-log');
+      try {
+        const res = await apiFetch('/api/alerts?per_page=5');
+        const data = await res.json();
+        const items = data.items || [];
+
+        if (!items.length) {
+          el.innerHTML = '<div style="padding: 24px; text-align:center; color:var(--text-muted);">No hay alertas registradas en el historial.</div>';
+          return;
+        }
+
+        el.innerHTML = items.map(a => {
+          const typeInfo = getType(a.type);
+          return `
+          <div class="live-log-item">
+            <div>
+              <div style="font-weight:600; display:flex; align-items:center; gap:8px;">
+                <span style="font-size:8px; color:${typeInfo.color};">●</span>
+                <span>${a.sensor}</span>
+              </div>
+              <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">
+                ${a.location || 'Sin ubicación'} • ${timeAgo(a.triggered_at)}
+              </div>
+            </div>
+            <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px;">
+              <span class="badge ${badgeClass(a.delivery_rf)}" style="font-size:9px; padding:1px 6px;">
+                RF: ${badgeText(a.delivery_rf)}
+              </span>
+              <span class="badge ${badgeClass(a.delivery_push)}" style="font-size:9px; padding:1px 6px;">
+                Push: ${badgeText(a.delivery_push)}
+              </span>
+            </div>
+          </div>`;
+        }).join('');
+      } catch (err) {
+        el.innerHTML = '<div style="padding: 24px; text-align:center; color:var(--text-muted);">Error al cargar log de alertas.</div>';
+      }
+    }
+
+    // Setup periodic reload
+    function initLiveLog() {
+      loadRecentAlerts();
+      if (logInterval) clearInterval(logInterval);
+      logInterval = setInterval(loadRecentAlerts, 5000); // Check every 5s
+    }
+
+    // Initialize page
+    loadSensors();
+    initLiveLog();
+
+    // Clean interval on page destroy
+    window.addEventListener('beforeunload', () => {
+      if (logInterval) clearInterval(logInterval);
+    });
+  </script>
+</body>
+
+</html>

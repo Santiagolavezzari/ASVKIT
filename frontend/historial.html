@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ASV Kit · Historial</title>
+<meta name="description" content="Historial completo de alertas del sistema ASV Kit." />
+<link rel="stylesheet" href="style.css" />
+<style>
+  /* Local specific overrides if any */
+  .filters {
+    display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 32px; align-items: center;
+  }
+  .filters .form-select {
+    width: auto; flex: none; min-width: 160px;
+  }
+  .export-btn { margin-left: auto; }
+  @media(max-width:600px) {
+    .filters .form-select { flex: 1; min-width: 100px; }
+    .export-btn { margin-left: 0; width: 100%; justify-content: center; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Mobile Topbar -->
+<div class="mobile-topbar">
+  <div style="font-family: 'Cal Sans', sans-serif; font-size: 18px; font-weight: 600;">ASV Kit</div>
+</div>
+
+<div class="panel-layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <a class="sidebar-logo" href="index.html">
+      <img src="asv-logo.png" alt="ASV Kit Logo" />
+    </a>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section">Aplicación</div>
+      <a class="nav-item" href="dashboard.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+        Dashboard
+      </a>
+      <a class="nav-item active" href="historial.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        Historial de Alertas
+      </a>
+
+      <div class="nav-section">Hardware</div>
+      <a class="nav-item" href="sensores.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="4" y="4" width="16" height="16" rx="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="2" x2="9" y2="4"></line><line x1="15" y1="2" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="22"></line><line x1="15" y1="20" x2="15" y2="22"></line><line x1="20" y1="9" x2="22" y2="9"></line><line x1="20" y1="14" x2="22" y2="14"></line><line x1="2" y1="9" x2="4" y2="9"></line><line x1="2" y1="14" x2="4" y2="14"></line></svg>
+        Sensores
+      </a>
+      <a class="nav-item" href="dispositivos.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="5" y="2" width="14" height="20" rx="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
+        Receptores
+      </a>
+
+      <div class="nav-section">Simulación</div>
+      <a class="nav-item" href="test.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+          <polyline points="2 17 12 22 22 17"/>
+          <polyline points="2 12 12 17 22 12"/>
+        </svg>
+        Laboratorio de Pruebas
+      </a>
+
+      <div class="nav-section admin-only" style="display:none">Administración</div>
+      <a class="nav-item admin-only" href="usuarios.html" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        Usuarios
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar" id="user-avatar">?</div>
+        <div>
+          <div class="user-name" id="user-name">—</div>
+          <div class="user-role" id="user-role">—</div>
+        </div>
+      </div>
+      <button class="nav-item" style="margin-top:8px;" onclick="logout()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+        Cerrar sesión
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <div class="main-content">
+    <div class="content fade-in">
+      
+      <!-- HERO -->
+      <div class="page-header">
+        <h1 class="page-title">Historial Visual</h1>
+        <p class="page-sub">Auditoría completa de todas las alertas registradas por la red de sensores.</p>
+      </div>
+
+      <div class="filters">
+        <select class="form-select" id="filter-type">
+          <option value="">Filtro: Todos los eventos</option>
+          <option value="doorbell">Timbre / Pánico</option>
+          <option value="smoke">Detección de Humo</option>
+          <option value="washer">Vibración (Lavadora)</option>
+          <option value="door_window">Magnéticos (Puertas)</option>
+        </select>
+        <select class="form-select" id="filter-rf">
+          <option value="">Entrega RF</option>
+          <option value="sent">Enviado exitosamente</option>
+          <option value="pending">Pendiente / En proceso</option>
+          <option value="failed">Error / Fallido</option>
+        </select>
+        <select class="form-select" id="filter-push">
+          <option value="">Notificación Push</option>
+          <option value="sent">Notificado (Enviado)</option>
+          <option value="pending">Pendiente a VAPID</option>
+          <option value="failed">Error de Push / Browser</option>
+        </select>
+        <button class="btn btn-primary" onclick="applyFilters()">
+          Aplicar Filtros
+        </button>
+        <button class="btn btn-ghost" onclick="clearFilters()">Restablecer</button>
+        
+        <button class="btn btn-ghost export-btn" onclick="doExport()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
+          </svg>
+          Exportar Base de Datos (CSV)
+        </button>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Eventos de Alerta</span>
+          <span id="alert-count" style="font-size:13px;color:var(--text-muted)">— eventos</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Hash / ID</th>
+                <th>Clase</th>
+                <th>Nodo Origen</th>
+                <th>Sector</th>
+                <th>Timestamp (Local)</th>
+                <th>Status Red (RF)</th>
+                <th>Status Push</th>
+              </tr>
+            </thead>
+            <tbody id="alerts-tbody">
+            </tbody>
+          </table>
+        </div>
+        <div class="pagination" id="pagination" style="display:none"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">
+  <div class="toast-dot" id="toast-dot"></div>
+  <span id="toast-msg"></span>
+</div>
+
+<script src="shared.js"></script>
+<script>
+  const user = authCheck();
+  if (user) initSidebar(user);
+
+  let currentPage = 1;
+  const perPage = 20;
+  let allAlerts = [];
+  let displayedAlerts = [];
+
+  function renderTable(list) {
+    const tbody = document.getElementById('alerts-tbody');
+    document.getElementById('alert-count').textContent = list.length + ' eventos';
+    if (!list.length) {
+      tbody.innerHTML = '<tr><td colspan="7" class="empty">No existen eventos que coincidan con los filtros seleccionados</td></tr>';
+      document.getElementById('pagination').style.display = 'none';
+      return;
+    }
+
+    const totalPages = Math.ceil(list.length / perPage);
+    currentPage = Math.min(currentPage, totalPages);
+    const start = (currentPage - 1) * perPage;
+    const pageItems = list.slice(start, start + perPage);
+
+    tbody.innerHTML = pageItems.map(a => {
+      const m = getType(a.type);
+      return `<tr>
+    <td class="muted"><code style="font-family:'SF Mono', monospace; font-size:13px; background:var(--bg-gray); padding:2px 6px; border-radius:4px;">#${a.id}</code></td>
+    <td><span class="badge" style="background:${m.bg};color:#000;">${m.label}</span></td>
+    <td style="font-weight:500;">${a.sensor || '—'}</td>
+    <td class="muted">${a.location || '—'}</td>
+    <td class="muted">${formatFull(a.triggered_at)}</td>
+    <td><span class="badge ${badgeClass(a.delivery_rf)}">${badgeText(a.delivery_rf)}</span></td>
+    <td><span class="badge ${badgeClass(a.delivery_push)}">${badgeText(a.delivery_push)}</span></td>
+  </tr>`;
+    }).join('');
+
+    renderPagination(totalPages);
+  }
+
+  function renderPagination(totalPages) {
+    const el = document.getElementById('pagination');
+    if (totalPages <= 1) { el.style.display = 'none'; return; }
+    el.style.display = 'flex';
+
+    let html = '';
+    html += `<button class="btn btn-ghost" ${currentPage <= 1 ? 'disabled style="opacity:.4;pointer-events:none"' : ''} onclick="goPage(${currentPage - 1})">Prev</button>`;
+
+    const maxShow = 5;
+    let startP = Math.max(1, currentPage - 2);
+    let endP = Math.min(totalPages, startP + maxShow - 1);
+    if (endP - startP < maxShow - 1) startP = Math.max(1, endP - maxShow + 1);
+
+    if (startP > 1) html += `<button class="btn btn-ghost" onclick="goPage(1)">1</button><span class="pagination-info">…</span>`;
+    for (let i = startP; i <= endP; i++) {
+      html += `<button class="btn ${i === currentPage ? 'active' : 'btn-ghost'}" onclick="goPage(${i})">${i}</button>`;
+    }
+    if (endP < totalPages) html += `<span class="pagination-info">…</span><button class="btn btn-ghost" onclick="goPage(${totalPages})">${totalPages}</button>`;
+
+    html += `<button class="btn btn-ghost" ${currentPage >= totalPages ? 'disabled style="opacity:.4;pointer-events:none"' : ''} onclick="goPage(${currentPage + 1})">Next</button>`;
+
+    el.innerHTML = html;
+  }
+
+  function goPage(p) {
+    currentPage = p;
+    renderTable(displayedAlerts);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function applyFilters() {
+    const type = document.getElementById('filter-type').value;
+    const rf = document.getElementById('filter-rf').value;
+    const push = document.getElementById('filter-push').value;
+    displayedAlerts = allAlerts;
+    if (type) displayedAlerts = displayedAlerts.filter(a => a.type === type);
+    if (rf) displayedAlerts = displayedAlerts.filter(a => a.delivery_rf === rf);
+    if (push) displayedAlerts = displayedAlerts.filter(a => a.delivery_push === push);
+    currentPage = 1;
+    renderTable(displayedAlerts);
+  }
+
+  function clearFilters() {
+    document.getElementById('filter-type').value = '';
+    document.getElementById('filter-rf').value = '';
+    document.getElementById('filter-push').value = '';
+    displayedAlerts = allAlerts;
+    currentPage = 1;
+    renderTable(displayedAlerts);
+  }
+
+  function doExport() {
+    if (!displayedAlerts.length) { showToast('No existen datos procesados para exportar', false); return; }
+    const headers = ['ID', 'Clase', 'Nodo', 'Ubicación', 'Timestamp', 'RF_Status', 'Push_Status'];
+    const rows = displayedAlerts.map(a => [
+      a.id, getType(a.type).label, a.sensor || '', a.location || '',
+      a.triggered_at, a.delivery_rf, a.delivery_push
+    ]);
+    exportCSV(headers, rows, `asvkit_data_export_${new Date().toISOString().slice(0, 10)}.csv`);
+    showToast('Base de datos CSV exportada');
+  }
+
+  async function load() {
+    document.getElementById('alerts-tbody').innerHTML = '<tr><td colspan="7" class="empty">Descargando datos de auditoría...</td></tr>';
+    try {
+      const res = await apiFetch('/api/alerts?per_page=1000'); // We fetch a larger batch for historical viewing and filtering
+      const data = await res.json();
+      allAlerts = data.items || [];
+      displayedAlerts = allAlerts;
+      renderTable(displayedAlerts);
+    } catch {
+      document.getElementById('alerts-tbody').innerHTML =
+        '<tr><td colspan="7" class="empty">Error de conectividad con la API</td></tr>';
+    }
+  }
+
+  load();
+</script>
+</body>
+</html>
